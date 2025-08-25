@@ -1,0 +1,33 @@
+{
+  "name": "budgetv2",
+  "version": "1.0.0",
+  "description": "Projeto de IA generativa (Gemini) para criação de orçamentos de produtos e serviços.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LukIanni/BudgetGenerator-V2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LukIanni/BudgetGenerator-V2/issues"
+  },
+  "homepage": "https://github.com/LukIanni/BudgetGenerator-V2#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
