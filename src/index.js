@@ -16,12 +16,20 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/index.html'));
 });
 
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/views/index.html'));
+});
+
 app.get('/auth', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/auth.html'));
 });
 
 app.get('/usuario', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/usuario.html'));
+});
+
+app.get('/orcamento.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/views/orcamento.html'));
 });
 
 const PORT = process.env.PORT || 3000;
