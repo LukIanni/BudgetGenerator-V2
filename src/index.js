@@ -1,3 +1,4 @@
+const authRoutes = require('./src/routes/authRoutes');
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -23,6 +24,8 @@ app.get('/auth', (req, res) => {
 app.get('/usuario', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/usuario.html'));
 });
+
+app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 3000;
 
