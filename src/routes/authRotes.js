@@ -1,12 +1,11 @@
 const express = require('express');
 
 const router = express.Router();
+const authContoller = require('../controllers/authController');
 
-router.post('/register', (req, res) => {
-    res.send('Rota de registro funcionando');
-});
+router.post('/register', authContoller.register);
 
-router.post('/login', (req, res) =>{
+router.post('/login', (req, authContoller) =>{
     res.send('Rota de longin funcionando');
 });
 
