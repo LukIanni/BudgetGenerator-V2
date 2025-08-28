@@ -65,6 +65,26 @@
                   required>
               </div>
             </div>
+            <!-- Novos campos do banco -->
+            <div class="row mb-3">
+              <div class="col">
+                <label class="form-label">Horas Estimadas*</label>
+                <input type="number" class="form-control" name="horas" placeholder="Ex.: 2" min="0" step="0.25" required>
+              </div>
+              <div class="col">
+                <label class="form-label">Valor Hora (R$)*</label>
+                <input type="number" class="form-control" name="valorHora" placeholder="0,00" min="0" step="0.01" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Custo Extra (R$)</label>
+              <input type="number" class="form-control" name="custoExtra" placeholder="0,00" min="0" step="0.01">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Resposta/Observação</label>
+              <textarea class="form-control" rows="2" name="resposta" placeholder="Observações"></textarea>
+            </div>
+            <!-- id_usuario pode ser enviado via hidden input se necessário -->
             <button type="submit" class="btn btn-custom w-100">Calcular Produto</button>
           </form>
         </div>
@@ -92,10 +112,29 @@
               </div>
             </div>
             <div class="mb-3">
+              <label class="form-label">Materiais Utilizados*</label>
+              <input type="text" class="form-control" name="materiaisServico" placeholder="Ex.: Tinta, Ferramentas..." required>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Custo (R$)*</label>
+                <input type="number" class="form-control" name="custoServico" placeholder="0,00" min="0" step="0.01" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Lucro (%)*</label>
+                <input type="number" class="form-control" name="lucroServico" placeholder="10" min="0" step="0.1" required>
+              </div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Descrição</label>
               <textarea class="form-control" rows="3" name="descricaoServico"
                 placeholder="Detalhes do serviço"></textarea>
             </div>
+            <div class="mb-3">
+              <label class="form-label">Resposta/Observação</label>
+              <textarea class="form-control" rows="2" name="respostaServico" placeholder="Observações"></textarea>
+            </div>
+            <!-- id_usuario pode ser enviado via hidden input se necessário -->
             <button type="submit" class="btn btn-custom w-100">Calcular Serviço</button>
           </form>
         </div>
