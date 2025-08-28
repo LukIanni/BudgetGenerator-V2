@@ -1,5 +1,5 @@
 CREATE TABLE USUARIO (
-    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario SERIAL PRIMARY KEY,
     nm_email_usuario VARCHAR(255) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
     nm_usuario VARCHAR(100) NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE USUARIO (
 
 -- Tabela SERVICO
 CREATE TABLE SERVICO (
-    id_servico INT AUTO_INCREMENT PRIMARY KEY,
+    id_servico SERIAL PRIMARY KEY,
     nome_servico VARCHAR(255) NOT NULL,
     materials TEXT,
     custo DECIMAL(10, 2) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE SERVICO (
 
 -- Tabela PRODUTO
 CREATE TABLE PRODUTO (
-    id_produto INT AUTO_INCREMENT PRIMARY KEY,
+    id_produto SERIAL PRIMARY KEY,
     descricao TEXT NOT NULL,
     horas DECIMAL(5, 2),
     valor_hora DECIMAL(10, 2),
