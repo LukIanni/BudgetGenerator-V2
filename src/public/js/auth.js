@@ -1,50 +1,84 @@
 
-// Lógica de alternar formulários
 document.addEventListener('DOMContentLoaded', () => {
-
-    const showLoginBtn = document.getElementById('showLoginBtn');
-    const showRegisterBtn = document.getElementById('showRegisterBtn');
-    const showRegisterBtn2 = document.getElementById('showRegisterBtn2');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
-    const welcomeTitle = document.getElementById('welcomeTitle');
-    const welcomeText = document.getElementById('welcomeText');
-    const authLeft = document.getElementById('authLeft');
 
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-    // Envio do formulário
-    const authform = document.getElementById('registerForm');
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmpassword = document.getElementById('confirmPassword').value;
 
-    authform.addEventListener('submit', async (e) => {
-        e.preventDefault();
+            const data = {
+                name,
+                email,
+                password,
+                confirmpassword,
+            };
 
-        const nome = document.getElementById('registerName').value;
-        const email = document.getElementById('registerEmail').value;
-        const senha = document.getElementById('registerPassword').value;
-        const confirmarSenha = document.getElementById('confirmPassword').value;
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
 
-        const data = {
-            nome,
-            email,
-            senha,
-            confirmarSenha,
-        };
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    // Optionally, you can clear the form or give other feedback
+                    registerForm.reset();
+                    // You might want to switch to the login view here if it's in a modal
+                    // For now, just an alert.
+                } else {
+                    alert(result.message || result.mensagem);
+                }
 
-        try {
-            const response = await fetch('http://localhost:3000/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao tentar cadastrar.');
+            }
+        });
+    }
 
-            const result = await response.json();
-            
-            console.log(result);
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        } catch (error) {
-            console.error('Erro:', error);
-        }
-    });
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const data = { email, password };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', result.token);
+                    alert(result.message);
+                    window.location.href = '/home'; // Redireciona para a página principal da aplicação
+                } else {
+                    alert(result.message);
+                }
+
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao tentar fazer login.');
+            }
+        });
+    }
 });

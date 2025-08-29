@@ -21,8 +21,8 @@ app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/index.html'));
 });
 
-app.get('/auth', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/views/auth.html'));
+app.get('/home', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/views/home.html'));
 });
 
 app.get('/usuario', (req, res) => {

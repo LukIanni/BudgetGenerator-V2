@@ -5,8 +5,6 @@ const authContoller = require('../controllers/authController');
 
 router.post('/register', authContoller.register);
 
-router.post('/login', (req, authContoller) =>{
-    res.send('Rota de longin funcionando');
-});
+router.post('/login', authContoller.login);
 
 module.exports = router;
