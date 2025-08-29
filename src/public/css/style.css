@@ -92,3 +92,92 @@ body {
     }
     .btn-custom:hover{background:#1b6f25}
   
+
+
+    /* Estilização Página visualização Orçamento */
+
+    /* Estilização Página Visualizar Orçamento */
+
+:root {
+  --verde-vivo: #228F2F;
+  --verde-claro: #BCDBBC;
+  --verde-escuro: #113815;
+  --verde-preto: #101B11;
+}
+
+/* Fundo suave e moderno */
+body {
+  background: linear-gradient(135deg, #f6fdf6 0%, #e8f5e9 40%, #d7e8d7 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card centralizado e com sombra */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 80vh;
+}
+
+.card-visualizar {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  padding: 32px 24px;
+  max-width: 600px;
+  width: 100%;
+  margin-top: 40px;
+}
+
+h2 {
+  color: var(--verde-escuro);
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+#orcamento-dados {
+  background: var(--verde-claro);
+  border-radius: 8px;
+  padding: 20px;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  color: var(--verde-preto);
+  box-shadow: 0 2px 8px rgba(34,143,47,.08);
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+}
+
+.btn-custom {
+  background: var(--verde-vivo);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  padding: 10px 24px;
+  margin-right: 8px;
+  transition: background .3s;
+}
+.btn-custom:hover {
+  background: #1b6f25;
+  color: #fff;
+}
+
+.btn-danger {
+  background: #c82333;
+  border: none;
+}
+.btn-danger:hover {
+  background: #a71d2a;
+}
+
+.btn-secondary {
+  background: var(--verde-escuro);
+  color: #fff;
+  border: none;
+}
+.btn-secondary:hover {
+  background: #101B11;
+  color: #fff;
+}
