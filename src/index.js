@@ -2,7 +2,8 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
+const syncDatabase = require('./syncDatabase');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
@@ -37,6 +38,11 @@ app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+const startServer = async () => {
+    await syncDatabase();
+    app.listen(PORT, () => {
+        console.log(`Servidor rodando na porta ${PORT}`);
+    });
+};
+
+startServer();
