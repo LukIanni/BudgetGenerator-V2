@@ -33,8 +33,11 @@ app.get('/orcamento.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/orcamento.html'));
 });
 
-const authRoutes = require('./routes/authRotes'); // Corrected path
+const authRoutes = require('./routes/authRotes');
+const userRoutes = require('./routes/userRoutes');
+
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 3000;
 
