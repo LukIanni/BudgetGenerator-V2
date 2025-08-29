@@ -2,6 +2,31 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
+    const toastContainer = document.querySelector('.toast-container');
+
+    const showToast = (message, type = 'danger') => {
+        const toastId = 'toast-' + Date.now();
+        const toastHTML = `
+            <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+        
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
+        toast.show();
+
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    };
 
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
@@ -30,19 +55,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const result = await response.json();
                 
-                if (response.ok) {
-                    alert(result.message);
-                    // Optionally, you can clear the form or give other feedback
-                    registerForm.reset();
-                    // You might want to switch to the login view here if it's in a modal
-                    // For now, just an alert.
+                if (response.ok && result.token) {
+                    localStorage.setItem('token', result.token);
+                    window.location.href = '/home';
                 } else {
-                    alert(result.message || result.mensagem);
+                    showToast(result.message || result.mensagem);
                 }
 
             } catch (error) {
                 console.error('Erro:', error);
-                alert('Erro ao tentar cadastrar.');
+                showToast('Erro de conexão. Tente novamente.');
             }
         });
     }
@@ -69,15 +91,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok) {
                     localStorage.setItem('token', result.token);
-                    alert(result.message);
-                    window.location.href = '/home'; // Redireciona para a página principal da aplicação
+                    window.location.href = '/home';
                 } else {
-                    alert(result.message);
+                    showToast(result.message);
                 }
 
             } catch (error) {
                 console.error('Erro:', error);
-                alert('Erro ao tentar fazer login.');
+                showToast('Erro de conexão. Tente novamente.');
             }
         });
     }

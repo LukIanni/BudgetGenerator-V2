@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // Função para cadastro do usúario
 const register = async (req, res) => {
@@ -37,14 +38,21 @@ const register = async (req, res) => {
             password: hashedPassword,
         });
 
-        return res.status(201).json({ message: 'Usuário criado com sucesso!', userId: newUser.id });
+        // Gera o token para o novo usuário
+        const token = jwt.sign({ id: newUser.id, name: newUser.name }, process.env.JWT_SECRET, {
+            expiresIn: '1h',
+        });
+
+        return res.status(201).json({ 
+            message: 'Usuário criado com sucesso!', 
+            token: token 
+        });
+
     } catch (error) {
         return res.status(500).json({ message: 'Erro ao criar usuário.', error: error.message });
     }
 
 };
-
-const jwt = require('jsonwebtoken');
 
 const login = async (req, res) => {
     const { email, password } = req.body;
