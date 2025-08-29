@@ -94,9 +94,10 @@ body {
   
 
 
-    /* Estilização Página visualização Orçamento */
 
     /* Estilização Página Visualizar Orçamento */
+
+/* Estilização Página Visualizar Orçamento */
 
 :root {
   --verde-vivo: #228F2F;
@@ -114,12 +115,8 @@ body {
 }
 
 /* Card centralizado e com sombra */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 80vh;
+.d-flex.justify-content-center.align-items-center {
+  min-height: 90vh;
 }
 
 .card-visualizar {
@@ -129,7 +126,10 @@ body {
   padding: 32px 24px;
   max-width: 600px;
   width: 100%;
-  margin-top: 40px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h2 {
@@ -147,37 +147,91 @@ h2 {
   box-shadow: 0 2px 8px rgba(34,143,47,.08);
   margin-bottom: 24px;
   white-space: pre-wrap;
+  width: 100%;
+  min-height: 120px;
+  max-width: 540px;
+  overflow-x: auto;
+  display: block;
 }
 
-.btn-custom {
+/* Botões customizados com sua paleta */
+.btn-vivo {
   background: var(--verde-vivo);
   color: #fff;
   font-weight: 700;
   border-radius: 8px;
   border: none;
   padding: 10px 24px;
-  margin-right: 8px;
-  transition: background .3s;
+  transition: background .3s, box-shadow .3s;
 }
-.btn-custom:hover {
-  background: #1b6f25;
+.btn-vivo:hover {
+  background: #176a22;
   color: #fff;
 }
 
-.btn-danger {
-  background: #c82333;
+.btn-claro {
+  background: var(--verde-claro);
+  color: var(--verde-escuro);
+  font-weight: 700;
+  border-radius: 8px;
   border: none;
+  padding: 10px 24px;
+  transition: background .3s, box-shadow .3s;
 }
-.btn-danger:hover {
-  background: #a71d2a;
+.btn-claro:hover {
+  background: #a3cfa3;
+  color: var(--verde-preto);
 }
 
-.btn-secondary {
+.btn-escuro {
   background: var(--verde-escuro);
   color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
   border: none;
+  padding: 10px 24px;
+  transition: background .3s, box-shadow .3s;
 }
-.btn-secondary:hover {
+.btn-escuro:hover {
   background: #101B11;
   color: #fff;
+}
+
+.btn-preto {
+  background: var(--verde-preto);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  padding: 10px 24px;
+  transition: background .3s, box-shadow .3s;
+}
+.btn-preto:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* Efeito de elevação nos botões */
+.btn-elevate {
+  box-shadow: 0 4px 12px rgba(34,143,47,0.12);
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+.btn-elevate:hover {
+  box-shadow: 0 8px 24px rgba(34,143,47,0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+
+/* Animação de texto da direita para esquerda */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.slide-in {
+  animation: slideInRight 0.7s ease;
 }
