@@ -59,3 +59,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = '/';
     });
 });
+
+// Funções de ação
+function verOrcamento(id) {
+    window.location.href = `/visualizarOrcamento.html?id=${id}`;
+}
+function editarOrcamento(id) {
+    window.location.href = `/orcamento.html?edit=${id}`;
+}
+async function excluirOrcamento(id) {
+    if (confirm('Deseja excluir este orçamento?')) {
+        const token = localStorage.getItem('token');
+        await fetch(`http://localhost:3000/api/orcamentos/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+        location.reload();
+    }
+}
