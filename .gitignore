@@ -69,3 +69,6 @@ yarn-debug.log*
 *.key
 # Arquivo de relatório de contribuições pessoal
 RELATORIO_CONTRIBUICOES.md
+
+# Ignore local environment files
+.env
