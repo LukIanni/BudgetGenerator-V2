@@ -92,3 +92,146 @@ body {
     }
     .btn-custom:hover{background:#1b6f25}
   
+
+
+
+    /* Estilização Página Visualizar Orçamento */
+
+/* Estilização Página Visualizar Orçamento */
+
+:root {
+  --verde-vivo: #228F2F;
+  --verde-claro: #BCDBBC;
+  --verde-escuro: #113815;
+  --verde-preto: #101B11;
+}
+
+/* Fundo suave e moderno */
+body {
+  background: linear-gradient(135deg, #f6fdf6 0%, #e8f5e9 40%, #d7e8d7 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card centralizado e com sombra */
+.d-flex.justify-content-center.align-items-center {
+  min-height: 90vh;
+}
+
+.card-visualizar {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  padding: 32px 24px;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h2 {
+  color: var(--verde-escuro);
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+#orcamento-dados {
+  background: var(--verde-claro);
+  border-radius: 8px;
+  padding: 20px;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  color: var(--verde-preto);
+  box-shadow: 0 2px 8px rgba(34,143,47,.08);
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+  width: 100%;
+  min-height: 120px;
+  max-width: 540px;
+  overflow-x: auto;
+  display: block;
+}
+
+/* Botões customizados com sua paleta */
+.btn-vivo {
+  background: var(--verde-vivo);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  padding: 10px 24px;
+  transition: background .3s, box-shadow .3s;
+}
+.btn-vivo:hover {
+  background: #176a22;
+  color: #fff;
+}
+
+.btn-claro {
+  background: var(--verde-claro);
+  color: var(--verde-escuro);
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  padding: 10px 24px;
+  transition: background .3s, box-shadow .3s;
+}
+.btn-claro:hover {
+  background: #a3cfa3;
+  color: var(--verde-preto);
+}
+
+.btn-escuro {
+  background: var(--verde-escuro);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  padding: 10px 24px;
+  transition: background .3s, box-shadow .3s;
+}
+.btn-escuro:hover {
+  background: #101B11;
+  color: #fff;
+}
+
+.btn-preto {
+  background: var(--verde-preto);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  padding: 10px 24px;
+  transition: background .3s, box-shadow .3s;
+}
+.btn-preto:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* Efeito de elevação nos botões */
+.btn-elevate {
+  box-shadow: 0 4px 12px rgba(34,143,47,0.12);
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+.btn-elevate:hover {
+  box-shadow: 0 8px 24px rgba(34,143,47,0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+
+/* Animação de texto da direita para esquerda */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.slide-in {
+  animation: slideInRight 0.7s ease;
+}

@@ -48,4 +48,7 @@ const startServer = async () => {
     });
 };
 
+const iaOrcamentoRoutes = require('./routes/iaOrcamentoRoutes');
+app.use('/api', iaOrcamentoRoutes);
+
 startServer();
