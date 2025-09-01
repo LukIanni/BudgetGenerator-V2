@@ -42,9 +42,10 @@
                                     <label for="updatePassword" class="form-label">Nova senha</label>
                                     <input type="password" id="updatePassword" class="form-control" placeholder="Deixe em branco para não alterar">
                                 </div>
-                                <div class="d-flex justify-content-between">
-                                    <button type="submit" class="btn btn-success">Salvar</button>
-                                    <button type="button" id="cancelUpdateBtn" class="btn btn-secondary">Cancelar</button>
+                                <div class="d-flex justify-content-between flex-wrap">
+                                    <button type="submit" class="btn btn-success mb-2">Salvar</button>
+                                    <button type="button" id="changePhotoBtn" class="btn btn-info mb-2">Alterar Foto</button>
+                                    <button type="button" id="cancelUpdateBtn" class="btn btn-secondary mb-2">Cancelar</button>
                                 </div>
                             </form>
                             <button id="deleteAccountBtn" class="btn btn-danger w-100 mt-3">Excluir Conta</button>
@@ -77,6 +78,24 @@
                 <button id="keepAccountBtn" class="btn btn-primary btn-lg">Quero Ficar!</button>
                 <button id="confirmDeleteBtn" class="btn btn-outline-danger">Excluir Mesmo Assim</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal de Upload de Foto -->
+    <div id="photoUploadModal" class="modal-backdrop">
+        <div class="modal-content-custom">
+            <h4>Alterar Foto de Perfil</h4>
+            <p>Escolha uma nova foto para o seu perfil.</p>
+            <form id="photoUploadForm">
+                <div class="mb-3">
+                    <input type="file" id="photoFile" class="form-control" accept="image/*">
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-success">Fazer Upload</button>
+                    <button type="button" id="removePhotoBtn" class="btn btn-danger">Remover Foto</button>
+                    <button type="button" id="cancelUploadBtn" class="btn btn-secondary">Cancelar</button>
+                </div>
+            </form>
         </div>
     </div>
 

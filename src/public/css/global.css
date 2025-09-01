@@ -61,6 +61,13 @@
     margin-bottom: 25px;
 }
 
+.modal-buttons {
+    display: flex;
+    justify-content: center; /* Centraliza o grupo de botões */
+    gap: 15px; /* Adiciona um espaço de 15px entre cada botão */
+    flex-wrap: wrap; /* Permite que os botões quebrem a linha em telas pequenas */
+}
+
 .modal-buttons .btn {
-    margin: 0 10px;
+    margin: 0; /* Remove a margem antiga para não conflitar com o gap */
 }

@@ -1,5 +1,9 @@
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
+
+const defaultPhotoPath = '/images/testeusuario.jpeg';
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -59,23 +63,69 @@ const updateUserProfile = async (req, res) => {
 // @route   POST /api/users/profile/photo
 // @access  Private
 const updateUserProfilePhoto = async (req, res) => {
-    const user = await User.findByPk(req.user.id);
+    try {
+        const user = await User.findByPk(req.user.id);
 
-    if (user) {
-        if (req.file) {
-            user.photo = `/uploads/${req.file.filename}`;
-            await user.save();
-            res.json({ 
-                message: 'Foto de perfil atualizada com sucesso.',
-                photo: user.photo
-            });
+        if (user) {
+            if (req.file) {
+                // Deleta a foto antiga se não for a padrão
+                if (user.photo && user.photo !== defaultPhotoPath) {
+                    const oldPhotoPath = path.join(__dirname, '..', 'public', user.photo);
+                    if (fs.existsSync(oldPhotoPath)) {
+                        fs.unlinkSync(oldPhotoPath);
+                    }
+                }
+
+                user.photo = `/uploads/${req.file.filename}`;
+                await user.save();
+                res.json({ 
+                    message: 'Foto de perfil atualizada com sucesso.',
+                    photo: user.photo
+                });
+            } else {
+                res.status(400).json({ message: 'Nenhum arquivo de imagem enviado.' });
+            }
         } else {
-            res.status(400).json({ message: 'Nenhum arquivo de imagem enviado.' });
+            res.status(404).json({ message: 'Usuário não encontrado.' });
         }
-    } else {
-        res.status(404).json({ message: 'Usuário não encontrado.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Erro no servidor ao atualizar a foto.' });
     }
 };
+
+// @desc    Delete user profile photo
+// @route   DELETE /api/users/profile/photo
+// @access  Private
+const deleteUserProfilePhoto = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        // Deleta o arquivo de foto antigo, se existir e não for o padrão
+        if (user.photo && user.photo !== defaultPhotoPath) {
+            const oldPhotoPath = path.join(__dirname, '..', 'public', user.photo);
+            if (fs.existsSync(oldPhotoPath)) {
+                fs.unlinkSync(oldPhotoPath);
+            }
+        }
+
+        // Restaura para a foto padrão
+        user.photo = defaultPhotoPath;
+        await user.save();
+
+        res.json({ 
+            message: 'Foto de perfil removida com sucesso.',
+            photo: user.photo // Retorna o caminho da nova foto padrão
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Erro no servidor ao remover a foto.' });
+    }
+};
+
 
 // @desc    Delete user account
 // @route   DELETE /api/users/profile
@@ -95,5 +145,6 @@ module.exports = {
     getUserProfile,
     updateUserProfile,
     updateUserProfilePhoto,
+    deleteUserProfilePhoto,
     deleteUserAccount,
 };

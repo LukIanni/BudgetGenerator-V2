@@ -12,18 +12,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const budgetListEl = document.getElementById('budgetList');
     const logoutBtn = document.getElementById('logoutBtn');
     
-    // Elementos do formulário de atualização
+    // Formulário de atualização de dados
     const toggleUpdateFormBtn = document.getElementById('toggleUpdateFormBtn');
     const updateFormContainer = document.getElementById('updateFormContainer');
     const updateForm = document.getElementById('updateForm');
     const cancelUpdateBtn = document.getElementById('cancelUpdateBtn');
     const feedbackMessageEl = document.getElementById('feedbackMessage');
 
-    // Elementos do modal de exclusão
+    // Modal de exclusão
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     const deleteConfirmModal = document.getElementById('deleteConfirmModal');
     const keepAccountBtn = document.getElementById('keepAccountBtn');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    // Modal de upload de foto
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
+    const photoUploadModal = document.getElementById('photoUploadModal');
+    const photoUploadForm = document.getElementById('photoUploadForm');
+    const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+    const removePhotoBtn = document.getElementById('removePhotoBtn'); // Botão de remover foto
 
     // --- Funções ---
     const showFeedback = (message, isError = false) => {
@@ -76,8 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     toggleUpdateFormBtn.addEventListener('click', () => {
-        const isVisible = updateFormContainer.style.display === 'block';
-        updateFormContainer.style.display = isVisible ? 'none' : 'block';
+        updateFormContainer.style.display = updateFormContainer.style.display === 'block' ? 'none' : 'block';
     });
 
     cancelUpdateBtn.addEventListener('click', () => {
@@ -112,9 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showFeedback('Dados atualizados com sucesso!');
                 if (result.email) userEmailEl.textContent = result.email;
                 updateForm.reset();
-                setTimeout(() => {
-                    updateFormContainer.style.display = 'none';
-                }, 2000);
+                setTimeout(() => { updateFormContainer.style.display = 'none'; }, 2000);
             } else {
                 showFeedback(result.message || 'Erro ao atualizar.', true);
             }
@@ -124,14 +128,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Lógica do Modal de Exclusão
-    deleteAccountBtn.addEventListener('click', () => {
-        deleteConfirmModal.style.display = 'flex';
-    });
-
-    keepAccountBtn.addEventListener('click', () => {
-        deleteConfirmModal.style.display = 'none';
-    });
-
+    deleteAccountBtn.addEventListener('click', () => { deleteConfirmModal.style.display = 'flex'; });
+    keepAccountBtn.addEventListener('click', () => { deleteConfirmModal.style.display = 'none'; });
     confirmDeleteBtn.addEventListener('click', async () => {
         try {
             const response = await fetch('http://localhost:3000/api/users/profile', {
@@ -150,6 +148,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             alert('Erro de conexão.');
             deleteConfirmModal.style.display = 'none';
+        }
+    });
+
+    // Lógica do Modal de Upload de Foto
+    changePhotoBtn.addEventListener('click', () => { photoUploadModal.style.display = 'flex'; });
+    cancelUploadBtn.addEventListener('click', () => { photoUploadModal.style.display = 'none'; });
+
+    removePhotoBtn.addEventListener('click', async () => {
+        if (confirm('Tem certeza que deseja remover sua foto de perfil? A foto padrão será restaurada.')) {
+            try {
+                const response = await fetch('http://localhost:3000/api/users/profile/photo', {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    userImageEl.src = result.photo; // Atualiza para a foto padrão
+                    photoUploadModal.style.display = 'none';
+                } else {
+                    alert(result.message || 'Erro ao remover a foto.');
+                }
+            } catch (error) {
+                alert('Erro de conexão ao remover a foto.');
+            }
+        }
+    });
+
+    photoUploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const photoFile = document.getElementById('photoFile').files[0];
+        if (!photoFile) {
+            alert('Por favor, selecione um arquivo de imagem.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('profilePhoto', photoFile);
+
+        try {
+            const response = await fetch('http://localhost:3000/api/users/profile/photo', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData,
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert('Foto de perfil atualizada com sucesso!');
+                userImageEl.src = result.photo; // Atualiza a imagem na página
+                photoUploadModal.style.display = 'none';
+            } else {
+                alert(result.message || 'Erro ao fazer upload da foto.');
+            }
+        } catch (error) {
+            alert('Erro de conexão ao fazer upload.');
         }
     });
 });

@@ -31,11 +31,12 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     try {
-        // Cria o novo usuário
+        // Cria o novo usuário com a foto de perfil padrão
         const newUser = await User.create({
             name,
             email,
             password: hashedPassword,
+            photo: '/images/testeusuario.jpeg' // Adiciona a foto padrão
         });
 
         // Gera o token para o novo usuário
