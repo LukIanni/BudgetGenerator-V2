@@ -67,3 +67,5 @@ yarn-debug.log*
 # Private keys
 *.pem
 *.key
+# Arquivo de relatório de contribuições pessoal
+RELATORIO_CONTRIBUICOES.md

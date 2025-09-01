@@ -18,25 +18,40 @@ const getUserProfile = async (req, res) => {
     }
 };
 
-// @desc    Update user password
-// @route   PUT /api/users/profile/password
+// @desc    Update user profile (email, password)
+// @route   PUT /api/users/profile
 // @access  Private
-const updateUserPassword = async (req, res) => {
-    const { oldPassword, newPassword } = req.body;
+const updateUserProfile = async (req, res) => {
+    const { email, password } = req.body;
 
-    if (!oldPassword || !newPassword) {
-        return res.status(400).json({ message: 'Por favor, forneça a senha antiga e a nova senha.' });
-    }
+    try {
+        const user = await User.findByPk(req.user.id);
 
-    const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
 
-    if (user && (await bcrypt.compare(oldPassword, user.password))) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(newPassword, salt);
+        if (email) {
+            user.email = email;
+        }
+
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(password, salt);
+        }
+
         await user.save();
-        res.json({ message: 'Senha alterada com sucesso.' });
-    } else {
-        res.status(401).json({ message: 'Senha antiga incorreta.' });
+
+        res.json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            photo: user.photo,
+            message: 'Perfil atualizado com sucesso.'
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao atualizar o perfil.' });
     }
 };
 
@@ -78,7 +93,7 @@ const deleteUserAccount = async (req, res) => {
 
 module.exports = {
     getUserProfile,
-    updateUserPassword,
+    updateUserProfile,
     updateUserProfilePhoto,
     deleteUserAccount,
 };
