@@ -48,26 +48,21 @@ router.post('/orcamentos', async (req, res) => {
 });
 
 // Nova rota para buscar um orçamento pelo ID
-router.get('/orcamentos/:id', async (req, res) => {
+// Nova rota para buscar TODOS os orçamentos (sem ID)
+router.get('/orcamentos', async (req, res) => {
   try {
-    const { id } = req.params;
-    let orcamentoEncontrado;
+    const produtos = await Produto.findAll();
+    const servicos = await Servico.findAll();
 
-    // Tenta encontrar o orçamento em ambas as tabelas (Produto e Servico)
-    orcamentoEncontrado = await Produto.findByPk(id);
-    if (!orcamentoEncontrado) {
-      orcamentoEncontrado = await Servico.findByPk(id);
-    }
-    
-    if (!orcamentoEncontrado) {
-      return res.status(404).json({ mensagem: "Orçamento não encontrado." });
-    }
+    const todosOrcamentos = {
+      produtos: produtos,
+      servicos: servicos
+    };
 
-    res.status(200).json(orcamentoEncontrado);
-
+    res.status(200).json(todosOrcamentos);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensagem: "Erro ao buscar o orçamento." });
+    res.status(500).json({ mensagem: "Erro ao buscar os orçamentos." });
   }
 });
 

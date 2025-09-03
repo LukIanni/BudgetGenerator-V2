@@ -29,9 +29,6 @@ app.get('/usuario', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/usuario.html'));
 });
 
-app.get('/api', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/views/orcamento.html'));
-});
 
 app.get('/orcamento.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/orcamento.html'));
