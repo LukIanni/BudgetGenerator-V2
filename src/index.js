@@ -29,26 +29,28 @@ app.get('/usuario', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/usuario.html'));
 });
 
-app.get('/orcamento.html', (req, res) => {
+app.get('/api', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/orcamento.html'));
 });
 
 const authRoutes = require('./routes/authRotes');
 const userRoutes = require('./routes/userRoutes');
+const apiOrcamentoRoutes = require('./routes/apiOrcamento'); 
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', apiOrcamentoRoutes);
 
+syncDatabase().then(() => {
 const PORT = process.env.PORT || 3000;
-
-const startServer = async () => {
-    await syncDatabase();
     app.listen(PORT, () => {
         console.log(`Servidor rodando na porta ${PORT}`);
     });
-};
+}).catch(err => {
+    console.error("Erro ao sincronizar o banco de dados:", err);
+});
 
-const iaOrcamentoRoutes = require('./routes/iaOrcamentoRoutes');
-app.use('/api', iaOrcamentoRoutes);
+module.exports = app;
 
-startServer();
+

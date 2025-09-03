@@ -1,32 +1,20 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // Corrigido o caminho do arquivo de configuração
+const sequelize = require('../config/database');
 
 const Produto = sequelize.define('Produto', {
-    nomeProduto: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    custoProducao: {
-        type: DataTypes.FLOAT,
-        allowNull: false
-    },
-    materiaisUtilizados: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    margemLucro: {
-        type: DataTypes.FLOAT,
+    descricao: { 
+        type: DataTypes.TEXT,
         allowNull: false
     },
     horas: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: true 
     },
-    valorHora: {
+    valor_hora: { 
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: true
     },
-    custoExtra: {
+    custo_extra: { 
         type: DataTypes.FLOAT,
         defaultValue: 0
     },
