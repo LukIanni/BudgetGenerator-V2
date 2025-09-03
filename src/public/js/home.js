@@ -82,7 +82,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = '/';
     });
 
-<<<<<<< Updated upstream
     toggleUpdateFormBtn.addEventListener('click', () => {
         updateFormContainer.style.display = updateFormContainer.style.display === 'block' ? 'none' : 'block';
     });
@@ -209,5 +208,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
-=======
->>>>>>> Stashed changes
