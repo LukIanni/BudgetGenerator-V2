@@ -1,37 +1,28 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // Corrigido o caminho do arquivo de configuração
+const sequelize = require('../config/database');
 
 const Servico = sequelize.define('Servico', {
-    nomeServico: {
+    nome_servico: { // Corrigido para 'nome_servico'
         type: DataTypes.STRING,
         allowNull: false
     },
-    valorBase: {
+    materials: { // Corrigido para 'materials'
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    custo: { // Corrigido para 'custo'
         type: DataTypes.FLOAT,
         allowNull: false
     },
-    horasEstimadas: {
+    lucro: { // Corrigido para 'lucro'
         type: DataTypes.FLOAT,
         allowNull: false
     },
-    materiaisServico: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    custoServico: {
-        type: DataTypes.FLOAT,
-        allowNull: false
-    },
-    lucroServico: {
-        type: DataTypes.FLOAT,
-        allowNull: false
-    },
-    descricaoServico: {
-        type: DataTypes.TEXT
-    },
-    respostaServico: {
+    resposta: { // Corrigido para 'resposta'
         type: DataTypes.TEXT
     }
+    // As colunas valorBase, horasEstimadas e descricaoServico
+    // não existem no seu SQL, então foram removidas.
     // id_usuario pode ser adicionado se necessário
 });
 
