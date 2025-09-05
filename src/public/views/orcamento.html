@@ -20,7 +20,7 @@
         <h2 class="m-0">BudgetGenerator</h2>
       </a>
       <div>
-        <button id="logoutBtn" class="btn text-light corBotoes">Sair</button>
+        <a href="index.html"><button  id="logoutBtn" class="btn text-light corBotoes">Sair</button></a>
       </div>
     </div>
   </nav>
@@ -43,45 +43,46 @@
             <div class="row mb-3">
               <div class="col">
                 <label class="form-label">Nome do Produto*</label>
-                <input type="text" class="form-control" name="nomeProduto" placeholder="Digite o nome" required>
+                <input type="text" id="meuInput" class="form-control" name="nomeProduto" placeholder="Digite o nome"
+                  required>
               </div>
               <div class="col">
                 <label class="form-label">Custo de Produção (R$)*</label>
-                <input type="number" class="form-control" name="custoProducao" placeholder="0,00" min="0" step="0.01"
+                <input type="number" id="meuInput" class="form-control" name="custoProducao" placeholder="0,00" min="0" step="0.01"
                   required>
               </div>
             </div>
             <div class="row mb-3">
               <div class="col">
                 <label class="form-label">Materiais Utilizados*</label>
-                <input type="text" class="form-control" name="materiaisUtilizados" placeholder="Ex.: Madeira, Cola..."
+                <input type="text" id="meuInput" class="form-control" name="materiaisUtilizados" placeholder="Ex.: Madeira, Cola..."
                   required>
               </div>
               <div class="col">
                 <label class="form-label">Margem de Lucro (%)*</label>
-                <input type="number" class="form-control" name="margemLucro" placeholder="10" min="0" step="0.1"
+                <input type="number" id="meuInput" class="form-control" name="margemLucro" placeholder="10" min="0" step="0.1"
                   required>
               </div>
             </div>
             <div class="row mb-3">
               <div class="col">
                 <label class="form-label">Horas Estimadas*</label>
-                <input type="number" class="form-control" name="horas" placeholder="Ex.: 2" min="0" step="0.25"
+                <input type="number" id="meuInput" class="form-control" name="horas" placeholder="Ex.: 2" min="0" step="0.25"
                   required>
               </div>
               <div class="col">
                 <label class="form-label">Valor Hora (R$)*</label>
-                <input type="number" class="form-control" name="valorHora" placeholder="0,00" min="0" step="0.01"
+                <input type="number" id= "meuInput" class="form-control" name="valorHora" placeholder="0,00" min="0" step="0.01"
                   required>
               </div>
             </div>
             <div class="mb-3">
               <label class="form-label">Custo Extra (R$)</label>
-              <input type="number" class="form-control" name="custoExtra" placeholder="0,00" min="0" step="0.01">
+              <input type="number" id= "meuInput" class="form-control" name="custoExtra" placeholder="0,00" min="0" step="0.01">
             </div>
             <div class="mb-3">
               <label class="form-label">Resposta/Observação</label>
-              <textarea class="form-control" rows="2" name="resposta" placeholder="Observações"></textarea>
+              <textarea id= "meuInput" class="form-control" rows="2" name="resposta" placeholder="Observações"></textarea>
             </div>
             <button type="submit" class="btn btn-vivo btn-elevate w-100">Calcular Produto</button>
           </form>
@@ -91,18 +92,18 @@
           <form id="form-servico" action="/api/orcamentos" method="POST">
             <div class="mb-3">
               <label class="form-label">Nome do Serviço*</label>
-              <input type="text" class="form-control" name="nomeServico" placeholder="Digite o serviço" required>
+              <input type="text" id= "meuInput" class="form-control" name="nomeServico" placeholder="Digite o serviço" required>
             </div>
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Valor Base (R$)*</label>
-                <input type="number" class="form-control" name="valorBase" placeholder="0,00" min="0" step="0.01"
+                <input type="number" id= "meuInput" class="form-control" name="valorBase" placeholder="0,00" min="0" step="0.01"
                   required>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Horas Estimadas (h)*</label>
                 <div class="input-group">
-                  <input type="number" class="form-control" name="horasEstimadas" placeholder="Ex.: 1.5" min="0"
+                  <input type="number" id= "meuInput" class="form-control" name="horasEstimadas" placeholder="Ex.: 1.5" min="0"
                     step="0.25" required>
                   <span class="input-group-text">h</span>
                 </div>
@@ -110,29 +111,29 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Materiais Utilizados*</label>
-              <input type="text" class="form-control" name="materiaisServico" placeholder="Ex.: Tinta, Ferramentas..."
+              <input type="text" id= "meuInput" class="form-control" name="materiaisServico" placeholder="Ex.: Tinta, Ferramentas..."
                 required>
             </div>
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Custo (R$)*</label>
-                <input type="number" class="form-control" name="custoServico" placeholder="0,00" min="0" step="0.01"
+                <input type="number" id= "meuInput" class="form-control" name="custoServico" placeholder="0,00" min="0" step="0.01"
                   required>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Lucro (%)*</label>
-                <input type="number" class="form-control" name="lucroServico" placeholder="10" min="0" step="0.1"
+                <input type="number" id= "meuInput" class="form-control" name="lucroServico" placeholder="10" min="0" step="0.1"
                   required>
               </div>
             </div>
             <div class="mb-3">
               <label class="form-label">Descrição</label>
-              <textarea class="form-control" rows="3" name="descricaoServico"
+              <textarea class="form-control" id= "meuInput" rows="3" name="descricaoServico"
                 placeholder="Detalhes do serviço"></textarea>
             </div>
             <div class="mb-3">
               <label class="form-label">Resposta/Observação</label>
-              <textarea class="form-control" rows="2" name="respostaServico" placeholder="Observações"></textarea>
+              <textarea class="form-control" id= "meuInput" rows="2" name="respostaServico" placeholder="Observações"></textarea>
             </div>
             <button type="submit" class="btn btn-vivo btn-elevate w-100">Calcular Serviço</button>
           </form>

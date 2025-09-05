@@ -36,68 +36,72 @@ body {
 }
 
 
-/* Estilização Página Orçamento */
-  
-    :root{
-      --verde-vivo:#228F2F;
-      --verde-claro:#BCDBBC;
-      --verde-escuro:#113815;
-      --verde-preto:#101B11;
-    }
-
-    /* Fundo mais suave (look moderno) */
-    body {
-    background-color: #fff; /* Slightly darker gray background */
-    min-height: 100vh; /* Ensure covers full viewport height */
+/* Estilização Geral e Cores Página Orçamento*/
+:root {
+  --verde-vivo: #228F2F;
+  --verde-claro: #BCDBBC;
+  --verde-escuro: #113815;
+  --verde-preto: #101B11;
 }
 
-    /* Header glassmorphism leve */
-    .navbar-custom{
-      background: rgba(34,143,47,0.65);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-bottom:1px solid rgba(255,255,255,0.25);
-    }
-    .navbar-brand{color:#fff!important;font-weight:700;font-size:1.2rem}
-    .navbar-custom .nav-link{
-      color:#fff; font-weight:500; margin-left:15px; transition:.3s
-    }
-    .navbar-custom .nav-link:hover{color:#f1f1f1; text-decoration:underline}
+body {
+  background-color: #fff;
+  min-height: 100vh;
+}
 
-    .card-custom{
-      background: #BCDBBC;
-      border-radius:16px;
-      box-shadow:0 8px 24px rgba(0,0,0,.1);
-    }
+h2 {
+  color: var(--verde-vivo);
+  font-weight: 400;
+  margin-bottom: 24px;
+  font-family: 'Roboto', sans-serif;
+}
 
-    .nav-tabs .nav-link{color:var(--verde-escuro)}
-    .nav-tabs .nav-link.active{
-      background:var(--verde-vivo);
-      color:#fff!important; border:none; border-radius:6px 6px 0 0;
-    }
+/* Componentes de Layout e Seções */
+.corFrame {
+  background-color: var(--verde-claro) !important;
+}
 
-    .form-label{font-weight:600; color:var(--verde-escuro)}
-    .form-control{
-      background:#fff; border:1px solid #ccc; color:#333;
-    }
-    .form-control:focus{
-      border-color:var(--verde-vivo);
-      box-shadow:0 0 6px rgba(34,143,47,.4);
-    }
+.corFrame h2 {
+  font-weight: bold;
+}
 
-    .btn-custom{
-      background:var(--verde-vivo); color:#fff; font-weight:700; border-radius:8px;
-    }
-    .btn-custom:hover{background:#1b6f25}
-  
+/* Navbar (Header) */
+.navbar-custom {
+  background: rgba(34, 143, 47, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
 
+.navbar-brand {
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
 
+.navbar-custom .nav-link {
+  color: #fff;
+  font-weight: 500;
+  margin-left: 15px;
+  transition: .3s;
+}
 
-    
+.navbar-custom .nav-link:hover {
+  color: #f1f1f1;
+  text-decoration: underline;
+}
+
+/* Cards */
+.card-custom {
+  background: var(--verde-claro);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+}
+
 .card-visualizar {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
   padding: 32px 24px;
   max-width: 600px;
   width: 100%;
@@ -107,11 +111,59 @@ body {
   align-items: center;
 }
 
-h2 {
-  color: #228F2F;
-  font-weight: 400;
-  margin-bottom: 24px;
-  font-family: 'Roboto', sans-serif;
+/* Formulários */
+.form-label {
+  font-weight: 600;
+  color: var(--verde-escuro);
+}
+
+.form-control {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #333;
+}
+
+.form-control:focus {
+  border-color: var(--verde-vivo);
+  box-shadow: 0 0 6px rgba(34, 143, 47, .4);
+}
+
+#meuInput::placeholder {
+  color: var(--verde-vivo);
+}
+
+/* Abas (Tabs) */
+.nav-tabs .nav-link {
+  color: var(--verde-escuro);
+}
+
+.nav-tabs .nav-link.active {
+  background: var(--verde-vivo);
+  color: #fff !important;
+  border: none;
+  border-radius: 6px 6px 0 0;
+}
+
+/* Botões */
+.corBotoes {
+  background-color: var(--verde-escuro);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.corBotoes:hover {
+  background-color: #0a210c;
+  color: white;
+}
+
+.btn-custom {
+  background: var(--verde-vivo);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.btn-custom:hover {
+  background: #1b6f25;
 }
 
 .btn-vivo {
@@ -123,10 +175,4 @@ h2 {
   padding: 10px 24px;
   transition: background .3s, box-shadow .3s;
 }
-
-.corBotoes{
-    background-color: #113815;
-    transition: background-color 0.2s ease-in-out; /* Adiciona transição suave */
-}
-
 
