@@ -76,3 +76,69 @@ body {
 .modal-buttons .btn {
     margin: 0; /* Remove a margem antiga para não conflitar com o gap */
 }
+
+:root {
+  --verde-vivo: #228F2F;
+  --verde-claro: #BCDBBC;
+  --verde-escuro: #113815;
+  --verde-preto: #101B11;
+}
+
+h2 {
+  color: var(--verde-vivo);
+  font-weight: 400;
+  margin-bottom: 24px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.corFrame h2 {
+  font-weight: bold;
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--verde-escuro);
+}
+
+.form-control {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #333;
+}
+
+.form-control:focus {
+  border-color: var(--verde-vivo);
+  box-shadow: 0 0 6px rgba(34, 143, 47, .4);
+}
+
+.nav-tabs .nav-link {
+  color: var(--verde-escuro);
+}
+
+.nav-tabs .nav-link.active {
+  background: var(--verde-vivo);
+  color: #fff !important;
+  border: none;
+  border-radius: 6px 6px 0 0;
+}
+
+.btn-custom {
+  background: var(--verde-vivo);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.btn-custom:hover {
+  background: #1b6f25;
+}
+
+.btn-vivo {
+  background: var(--verde-vivo);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  padding: 10px 24px;
+  transition: background .3s, box-shadow .3s;
+}
