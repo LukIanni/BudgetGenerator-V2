@@ -1,9 +1,0 @@
-/* Styles for home.html */
-.container-md.corFrame {
-    max-width: 960px;
-}
-
-#updateFormContainer {
-    border-top: 1px solid #ccc;
-    padding-top: 15px;
-}
