@@ -1,0 +1,44 @@
+/* Custom styles for specific colors */
+.header-bg {
+    background-color: #BCDBBC;
+}
+.brand-color {
+    color: #228F2F;
+}
+.btn-custom {
+    background-color: #113815;
+    color: white;
+    border: none;
+}
+.btn-custom:hover {
+    background-color: #0a220c; /* Slightly darker on hover */
+    color: white;
+}
+.form-container-bg {
+    background-color: #BCDBBC;
+    padding: 20px;
+    border-radius: 8px;
+}
+.text-green {
+    color: #228F2F;
+}
+.box-info {
+    background-color: #f8f9fa; /* Light background for info boxes */
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,.05);
+}
+
+/* Header glassmorphism leve */
+.navbar-custom{
+  background: rgba(34,143,47,0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom:1px solid rgba(255,255,255,0.25);
+}
+.navbar-brand{color:#fff!important;font-weight:700;font-size:1.2rem}
+.navbar-custom .nav-link{
+  color:#fff; font-weight:500; margin-left:15px; transition:.3s
+}
+.navbar-custom .nav-link:hover{color:#f1f1f1; text-decoration:underline}

@@ -1,0 +1,9 @@
+.card-custom{
+  background: var(--verde-claro);
+  border-radius:16px;
+  box-shadow:0 8px 24px rgba(0,0,0,.1);
+}
+
+#meuInput::placeholder {
+  color: var(--verde-vivo);
+}

@@ -2,28 +2,43 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Servico = sequelize.define('Servico', {
-    nome_servico: { // Corrigido para 'nome_servico'
+    id_servico: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    nome_servico: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    materials: { // Corrigido para 'materials'
+    materials: {
         type: DataTypes.TEXT,
         allowNull: true
     },
-    custo: { // Corrigido para 'custo'
+    custo: {
         type: DataTypes.FLOAT,
         allowNull: false
     },
-    lucro: { // Corrigido para 'lucro'
+    lucro: {
         type: DataTypes.FLOAT,
         allowNull: false
     },
-    resposta: { // Corrigido para 'resposta'
+    resposta: {
         type: DataTypes.TEXT
+    },
+    id_usuario: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'Users',
+            key: 'id'
+        }
     }
-    // As colunas valorBase, horasEstimadas e descricaoServico
-    // não existem no seu SQL, então foram removidas.
-    // id_usuario pode ser adicionado se necessário
+}, {
+    tableName: 'servico',
+    timestamps: true,
+    createdAt: 'data_criacao',
+    updatedAt: 'data_atualizacao'
 });
 
 module.exports = Servico;
