@@ -69,8 +69,7 @@ yarn-debug.log*
 *.key
 # Arquivo de relatório de contribuições pessoal
 RELATORIO_CONTRIBUICOES.md
-relatorio.md
-
+RELATORIO_CONTRIBUICOES_Ianni.md
 # Ignore local environment files
 .env
 css_backup/
