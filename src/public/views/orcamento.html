@@ -143,28 +143,109 @@
     </div>
   </div>
 
+  <!-- Modal de Resposta -->
+  <div class="modal fade" id="respostaModal" tabindex="-1" aria-labelledby="respostaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="respostaModalLabel">Orçamento Gerado</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="loadingSpinner" class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Gerando orçamento...</span>
+            </div>
+            <p class="mt-2">Gerando orçamento personalizado...</p>
+          </div>
+          <div id="respostaContent" style="white-space: pre-line;" class="d-none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          <button type="button" class="btn btn-primary" id="copiarResposta">Copiar Resposta</button>
+          <button type="button" class="btn btn-success" id="novoOrcamento">Novo Orçamento</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Inicializa o modal
+    const respostaModal = new bootstrap.Modal(document.getElementById('respostaModal'));
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const respostaContent = document.getElementById('respostaContent');
+    
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const dados = Object.fromEntries(new FormData(this));
-
+        
         try {
-          // Envia dados para a nova rota que salva no banco
-          const resposta = await fetch('/api/orcamentos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dados)
-          }).then(r => r.json());
+          // Mostra o modal com loading
+          loadingSpinner.classList.remove('d-none');
+          respostaContent.classList.add('d-none');
+          respostaModal.show();
 
-          // Redireciona para a página de visualização, passando o ID do orçamento na URL
-          window.location.href = `/src/public/views/visualizarOrcamento.html?id=${resposta.orcamentoId}`;
+          const dados = Object.fromEntries(new FormData(this));
+
+          // Pega o token do localStorage
+          const token = localStorage.getItem('token');
+          if (!token) {
+            throw new Error('Usuário não está autenticado. Faça login novamente.');
+          }
+
+          // Envia dados para a API com o token
+          const response = await fetch('/api/orcamentos', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const resposta = await response.json();
+
+          if (resposta.success) {
+            // Esconde o loading e mostra a resposta
+            loadingSpinner.classList.add('d-none');
+            respostaContent.classList.remove('d-none');
+            respostaContent.textContent = resposta.resposta;
+          } else {
+            throw new Error(resposta.error || 'Erro ao gerar orçamento');
+          }
         } catch (err) {
-          alert('Erro ao gerar orçamento. Tente novamente.');
+          console.error('Erro:', err);
+          loadingSpinner.classList.add('d-none');
+          respostaContent.classList.remove('d-none');
+          respostaContent.textContent = 'Erro ao gerar orçamento. Por favor, tente novamente.\nDetalhes: ' + err.message;
         }
       });
+    });
+
+    // Botão de copiar resposta
+    document.getElementById('copiarResposta').addEventListener('click', () => {
+      const texto = respostaContent.textContent;
+      navigator.clipboard.writeText(texto).then(() => {
+        alert('Resposta copiada para a área de transferência!');
+      });
+    });
+
+    // Botão de novo orçamento
+    document.getElementById('novoOrcamento').addEventListener('click', () => {
+      respostaModal.hide();
+      document.querySelectorAll('form').forEach(form => form.reset());
+    });
+
+    // Quando o modal é fechado, limpa o conteúdo
+    document.getElementById('respostaModal').addEventListener('hidden.bs.modal', () => {
+      loadingSpinner.classList.remove('d-none');
+      respostaContent.classList.add('d-none');
+      respostaContent.textContent = '';
     });
   </script>
 </body>

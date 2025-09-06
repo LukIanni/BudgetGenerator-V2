@@ -10,7 +10,14 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve arquivos estáticos com os tipos MIME corretos
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, path, stat) => {
+        if (path.endsWith('.css')) {
+            res.set('Content-Type', 'text/css');
+        }
+    }
+}));
 
 // Rotas
 app.get('/', (req, res) => {
@@ -34,7 +41,7 @@ app.get('/orcamento.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/orcamento.html'));
 });
 
-const authRoutes = require('./routes/authRotes');
+const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const apiOrcamentoRoutes = require('./routes/apiOrcamento'); 
 
