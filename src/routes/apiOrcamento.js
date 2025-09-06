@@ -61,22 +61,37 @@ router.post('/orcamentos', protect, async (req, res) => {
   }
 });
 
-// Nova rota para buscar um orçamento pelo ID
-// Nova rota para buscar TODOS os orçamentos (sem ID)
-router.get('/orcamentos', async (req, res) => {
+// Rota para buscar um produto pelo ID
+router.get('/produtos/:id', async (req, res) => {
   try {
-    const produtos = await Produto.findAll();
-    const servicos = await Servico.findAll();
+    const { id } = req.params;
+    const produto = await Produto.findByPk(id);
 
-    const todosOrcamentos = {
-      produtos: produtos,
-      servicos: servicos
-    };
-
-    res.status(200).json(todosOrcamentos);
+    if (produto) {
+      res.status(200).json(produto);
+    } else {
+      res.status(404).json({ mensagem: "Produto não encontrado." });
+    }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensagem: "Erro ao buscar os orçamentos." });
+    res.status(500).json({ mensagem: "Erro ao buscar o produto." });
+  }
+});
+
+// Rota para buscar um serviço pelo ID
+router.get('/servicos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const servico = await Servico.findByPk(id);
+
+    if (servico) {
+      res.status(200).json(servico);
+    } else {
+      res.status(404).json({ mensagem: "Serviço não encontrado." });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensagem: "Erro ao buscar o serviço." });
   }
 });
 

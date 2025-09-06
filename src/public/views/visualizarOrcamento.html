@@ -40,11 +40,12 @@
       }
 
       const orcamentoId = getQueryParam('id');
+      const orcamentoType = getQueryParam('type');
       const container = document.getElementById('orcamento-dados');
 
-      if (orcamentoId) {
+      if (orcamentoId && orcamentoType) {
         // Busca o orçamento do banco de dados via API
-        fetch(`/api/orcamentos/${orcamentoId}`)
+        fetch(`/api/${orcamentoType}s/${orcamentoId}`)
           .then((response) => {
             if (!response.ok) {
               throw new Error('Orçamento não encontrado.');

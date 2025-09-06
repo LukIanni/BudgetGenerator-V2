@@ -72,3 +72,4 @@ RELATORIO_CONTRIBUICOES.md
 
 # Ignore local environment files
 .env
+css_backup/

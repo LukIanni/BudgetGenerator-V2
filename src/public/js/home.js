@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Carregamento de Dados ---
     try {
-        const response = await fetch('http://localhost:3000/api/users/profile', {
+        const response = await fetch('/api/users/profile', {
             headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -54,15 +54,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             userEmailEl.textContent = user.email;
             if (user.photo) userImageEl.src = user.photo;
 
-            const budgets = user.budgets || [];
+            const produtos = user.Produtos || [];
+            const servicos = user.Servicos || [];
+            const budgets = [...produtos, ...servicos];
+
             budgetListEl.innerHTML = '';
             if (budgets.length === 0) {
                 budgetListEl.innerHTML = '<li class="list-group-item corTextos">Nenhum orçamento encontrado.</li>';
             } else {
                 budgets.forEach(budget => {
+                    const isProduto = !!budget.descricao; // Verifica se é produto ou serviço
+                    const nome = isProduto ? budget.descricao : budget.nome_servico;
+                    const id = isProduto ? budget.id_produto : budget.id_servico;
+                    const type = isProduto ? 'produto' : 'servico';
+
                     const li = document.createElement('li');
                     li.className = 'list-group-item d-flex justify-content-between corTextos align-items-center py-2';
-                    li.innerHTML = `${budget.name} <a href="/orcamento/${budget.id}" class="btn text-light corBotoes">Ver</a>`;
+                    li.innerHTML = `${nome} <a href="visualizarOrcamento.html?id=${id}&type=${type}" class="btn text-light corBotoes">Ver</a>`;
                     budgetListEl.appendChild(li);
                 });
             }
@@ -105,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            const response = await fetch('http://localhost:3000/api/users/profile', {
+            const response = await fetch('/api/users/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -132,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     keepAccountBtn.addEventListener('click', () => { deleteConfirmModal.style.display = 'none'; });
     confirmDeleteBtn.addEventListener('click', async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/users/profile', {
+            const response = await fetch('/api/users/profile', {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` },
             });
@@ -158,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     removePhotoBtn.addEventListener('click', async () => {
         if (confirm('Tem certeza que deseja remover sua foto de perfil? A foto padrão será restaurada.')) {
             try {
-                const response = await fetch('http://localhost:3000/api/users/profile/photo', {
+                const response = await fetch('/api/users/profile/photo', {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` },
                 });
@@ -189,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         formData.append('profilePhoto', photoFile);
 
         try {
-            const response = await fetch('http://localhost:3000/api/users/profile/photo', {
+            const response = await fetch('/api/users/profile/photo', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData,

@@ -2,6 +2,8 @@ const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
+const Produto = require('../models/produto');
+const Servico = require('../models/servico');
 
 const defaultPhotoPath = '/images/testeusuario.jpeg';
 
@@ -9,16 +11,22 @@ const defaultPhotoPath = '/images/testeusuario.jpeg';
 // @route   GET /api/users/profile
 // @access  Private
 const getUserProfile = async (req, res) => {
-    const user = req.user;
-    if (user) {
-        res.json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            photo: user.photo
+    try {
+        const user = await User.findByPk(req.user.id, {
+            include: [
+                { model: Produto },
+                { model: Servico }
+            ]
         });
-    } else {
-        res.status(404).json({ message: 'Usuário não encontrado' });
+
+        if (user) {
+            res.json(user);
+        } else {
+            res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+    } catch (error) {
+        console.error('Erro ao buscar perfil do usuário:', error);
+        res.status(500).json({ message: 'Erro no servidor' });
     }
 };
 
