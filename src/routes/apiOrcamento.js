@@ -76,28 +76,28 @@ router.get('/meus-orcamentos', protect, async (req, res) => {
         // Busque os orçamentos de produtos e serviços do usuário
         const orcamentosProdutos = await Produto.findAll({
             where: { id_usuario },
-            attributes: ['id', 'descricao', 'createdAt', 'pdf_path'] // Selecione os campos necessários
+            attributes: ['id_produto', 'descricao', 'data_criacao', 'resposta']
         });
 
         const orcamentosServicos = await Servico.findAll({
             where: { id_usuario },
-            attributes: ['id', 'nome_servico', 'createdAt', 'pdf_path'] // Selecione os campos necessários
+            attributes: ['id_servico', 'nome_servico', 'data_criacao', 'resposta']
         });
 
         // Combine os dois arrays em um só, adicionando um tipo para diferenciação
         const todosOrcamentos = [
             ...orcamentosProdutos.map(p => ({
-                id: p.id,
+                id: p.id_produto,
                 nome: p.descricao,
-                data: p.createdAt,
-                pdf_path: p.pdf_path,
+                data: p.data_criacao,
+                resposta: p.resposta,
                 tipo: 'produto'
             })),
             ...orcamentosServicos.map(s => ({
-                id: s.id,
+                id: s.id_servico,
                 nome: s.nome_servico,
-                data: s.createdAt,
-                pdf_path: s.pdf_path,
+                data: s.data_criacao,
+                resposta: s.resposta,
                 tipo: 'servico'
             }))
         ];
@@ -112,23 +112,143 @@ router.get('/meus-orcamentos', protect, async (req, res) => {
     }
 });
 
-// Rota para download do PDF
-router.get('/download/:id', async (req, res) => {
+// Rota para visualizar o PDF
+router.get('/view/:id', protect, async (req, res) => {
     const { id } = req.params;
     const { tipo } = req.query;
 
     let registro;
-    if (tipo === 'produto') {
-        registro = await Produto.findByPk(id);
-    } else {
-        registro = await Servico.findByPk(id);
-    }
+    try {
+        if (tipo === 'produto') {
+            registro = await Produto.findOne({
+                where: { id_produto: id }
+            });
+        } else if (tipo === 'servico') {
+            registro = await Servico.findOne({
+                where: { id_servico: id }
+            });
+        } else {
+            return res.status(400).json({ erro: 'Tipo de orçamento inválido.' });
+        }
 
-    if (!registro || !registro.pdf_path) {
-        return res.status(404).send('PDF não encontrado');
-    }
+        if (!registro || !registro.pdf_path) {
+            return res.status(404).json({ erro: 'PDF não encontrado ou não gerado para este orçamento.' });
+        }
 
-    res.download(registro.pdf_path);
+        // Envie o arquivo PDF com content-type apropriado para visualização
+        res.contentType('application/pdf');
+        res.sendFile(registro.pdf_path);
+
+    } catch (error) {
+        console.error('Erro ao tentar visualizar PDF:', error);
+        res.status(500).json({ erro: 'Erro interno ao tentar visualizar o PDF.' });
+    }
+});
+
+// Rota para download do PDF
+router.get('/download/:id', protect, async (req, res) => {
+    const { id } = req.params;
+    const { tipo } = req.query;
+
+    let registro;
+    try {
+        if (tipo === 'produto') {
+            registro = await Produto.findOne({
+                where: { id_produto: id }
+            });
+        } else if (tipo === 'servico') {
+            registro = await Servico.findOne({
+                where: { id_servico: id }
+            });
+        } else {
+            return res.status(400).json({ erro: 'Tipo de orçamento inválido.' });
+        }
+
+        if (!registro || !registro.pdf_path) {
+            return res.status(404).json({ erro: 'PDF não encontrado ou não gerado para este orçamento.' });
+        }
+
+        // Force o download do arquivo
+        res.download(registro.pdf_path, `${registro.nome || registro.nome_servico || 'orcamento'}-${id}.pdf`);
+
+    } catch (error) {
+        console.error('Erro ao tentar baixar PDF:', error);
+        res.status(500).json({ erro: 'Erro interno ao tentar baixar o PDF.' });
+    }
+});
+
+// Rota para visualizar a resposta de um orçamento específico
+router.get('/resposta/:id', protect, async (req, res) => {
+    const { id } = req.params;
+    const { tipo } = req.query;
+
+    let registro;
+    try {
+        if (tipo === 'produto') {
+            registro = await Produto.findOne({
+                where: { 
+                    id_produto: id,
+                    id_usuario: req.userId 
+                }
+            });
+        } else if (tipo === 'servico') {
+            registro = await Servico.findOne({
+                where: { 
+                    id_servico: id,
+                    id_usuario: req.userId 
+                }
+            });
+        } else {
+            return res.status(400).json({ erro: 'Tipo de orçamento inválido.' });
+        }
+
+        if (!registro) {
+            return res.status(404).json({ erro: 'Orçamento não encontrado' });
+        }
+
+        res.send(registro.resposta || 'Nenhuma resposta disponível para este orçamento.');
+    } catch (error) {
+        console.error('Erro ao buscar resposta:', error);
+        res.status(500).json({ erro: 'Erro ao buscar resposta do orçamento' });
+    }
+});
+
+// Rota para excluir um orçamento
+router.delete('/:id', protect, async (req, res) => {
+    const { id } = req.params;
+    const { tipo } = req.query;
+
+    try {
+        let registro;
+        let deletado = 0;
+
+        if (tipo === 'produto') {
+            deletado = await Produto.destroy({
+                where: { 
+                    id_produto: id,
+                    id_usuario: req.userId 
+                }
+            });
+        } else if (tipo === 'servico') {
+            deletado = await Servico.destroy({
+                where: { 
+                    id_servico: id,
+                    id_usuario: req.userId 
+                }
+            });
+        } else {
+            return res.status(400).json({ erro: 'Tipo de orçamento inválido.' });
+        }
+
+        if (deletado === 0) {
+            return res.status(404).json({ erro: 'Orçamento não encontrado ou você não tem permissão para excluí-lo' });
+        }
+
+        res.json({ mensagem: 'Orçamento excluído com sucesso' });
+    } catch (error) {
+        console.error('Erro ao excluir orçamento:', error);
+        res.status(500).json({ erro: 'Erro ao excluir orçamento' });
+    }
 });
 
 module.exports = router;

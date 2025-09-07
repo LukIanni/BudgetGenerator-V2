@@ -3,15 +3,15 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 
 async function generateBudgetPdf(orcamentoData, iaResponse) {
-    // Cria pasta assets se não existir
-    const assetsDir = path.join(__dirname, '../assets');
-    if (!fs.existsSync(assetsDir)) {
-        fs.mkdirSync(assetsDir);
+    // Cria pasta uploads se não existir
+    const uploadsDir = path.join(__dirname, '../public/uploads/pdfs');
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
     // Caminho do arquivo PDF
-    const fileName = `${Date.now()}_orcamento.pdf`;
-    const pdfPath = path.join(assetsDir, fileName);
+    const fileName = `orcamento_${Date.now()}.pdf`;
+    const pdfPath = path.join(uploadsDir, fileName);
 
     // Criar documento PDF
     const doc = new PDFDocument();

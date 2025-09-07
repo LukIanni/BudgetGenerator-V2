@@ -1,4 +1,82 @@
-// home.js - VERSÃO CORRIGIDA E COMPLETA
+// Função para visualizar a resposta do orçamento
+function visualizarResposta(id, tipo) {
+    const respostaModal = new bootstrap.Modal(document.getElementById('respostaModal'));
+    const respostaModalBody = document.getElementById('respostaModalBody');
+    const token = localStorage.getItem('token');
+
+    fetch(`/api/orcamento/resposta/${id}?tipo=${tipo}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro ao carregar a resposta');
+        }
+        return response.text();
+    })
+    .then(texto => {
+        respostaModalBody.textContent = texto;
+        respostaModal.show();
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao carregar a resposta. Por favor, tente novamente.');
+    });
+}
+
+function copiarResposta() {
+    const texto = document.getElementById('respostaModalBody').textContent;
+    navigator.clipboard.writeText(texto)
+        .then(() => {
+            alert('Texto copiado para a área de transferência!');
+        })
+        .catch(err => {
+            console.error('Erro ao copiar texto:', err);
+            alert('Erro ao copiar o texto. Por favor, tente novamente.');
+        });
+}
+
+// Função para baixar o PDF
+async function baixarPDF(id, tipo) {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Você precisa estar logado para baixar o PDF');
+            window.location.href = '/';
+            return;
+        }
+
+        const response = await fetch(`/api/orcamento/download/${id}?tipo=${tipo}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro ao baixar PDF: ${response.statusText}`);
+        }
+
+        // Criar um blob a partir da resposta
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        // Criar um link temporário para download
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `orcamento-${tipo}-${id}.pdf`;
+        
+        // Adicionar à página, clicar e remover
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+    } catch (error) {
+        console.error('Erro ao baixar PDF:', error);
+        alert('Não foi possível baixar o PDF. Por favor, tente novamente.');
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
@@ -46,17 +124,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 3000);
     };
 
-    // Função para buscar e exibir os orçamentos
-    async function fetchAndRenderBudgets() {
-        try {
-            const response = await fetch('/api/orcamento/meus-orcamentos', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+// Função para excluir orçamento
+async function excluirOrcamento(id, tipo) {
+    if (!confirm('Tem certeza que deseja excluir este orçamento? Esta ação não pode ser desfeita.')) {
+        return;
+    }
 
-            if (!response.ok) {
+    const token = localStorage.getItem('token');
+    try {
+        const response = await fetch(`/api/orcamento/${id}?tipo=${tipo}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao excluir orçamento');
+        }
+
+        const result = await response.json();
+        alert(result.mensagem);
+        // Recarrega a lista de orçamentos
+        await fetchAndRenderBudgets();
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao excluir orçamento. Por favor, tente novamente.');
+    }
+}
+
+// Função para buscar e exibir os orçamentos
+async function fetchAndRenderBudgets() {
+    try {
+        const response = await fetch('/api/orcamento/meus-orcamentos', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });            if (!response.ok) {
                 if (response.status === 401) {
                     throw new Error('Não autorizado. Por favor, faça login novamente.');
                 }
@@ -73,19 +178,42 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             orcamentos.forEach(orcamento => {
                 const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between corTextos align-items-center py-2';
+                li.className = 'list-group-item d-flex justify-content-between align-items-center py-3';
+                
+                // Define o nome do orçamento baseado no tipo
+                const nomeOrcamento = orcamento.tipo === 'produto' ? orcamento.descricao : orcamento.nome_servico;
+                
                 const dataFormatada = new Date(orcamento.data).toLocaleDateString('pt-BR');
+                
                 li.innerHTML = `
                     <div class="d-flex flex-column">
-                        <span class="fw-bold">${orcamento.nome}</span>
+                        <span class="fw-bold">${nomeOrcamento}</span>
                         <small class="text-muted">${dataFormatada}</small>
+                        <small class="text-muted">Tipo: ${orcamento.tipo.charAt(0).toUpperCase() + orcamento.tipo.slice(1)}</small>
                     </div>
                     <div>
-                        <a href="/api/orcamento/download/${orcamento.id}?tipo=${orcamento.tipo}" 
-                           class="btn btn-primary btn-sm"
-                           target="_blank">
-                           <i class="bi bi-download"></i> Baixar PDF
-                        </a>
+                        <div class="btn-group">
+                            <button 
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="visualizarResposta('${orcamento.id}', '${orcamento.tipo}')">
+                                <i class="bi bi-eye"></i> Ver Resposta
+                            </button>
+                            <button 
+                                class="btn btn-outline-success btn-sm"
+                                onclick="visualizarOrcamento('${orcamento.resposta}')">
+                                <i class="bi bi-eye"></i> Ver Orçamento
+                            </button>
+                            <button 
+                                class="btn btn-success btn-sm"
+                                onclick="baixarPDF('${orcamento.id}', '${orcamento.tipo}')">
+                                <i class="bi bi-download"></i> Baixar PDF
+                            </button>
+                            <button 
+                                class="btn btn-outline-danger btn-sm"
+                                onclick="excluirOrcamento('${orcamento.id}', '${orcamento.tipo}')">
+                                <i class="bi bi-trash"></i> Excluir
+                            </button>
+                        </div>
                     </div>
                 `;
                 budgetListEl.appendChild(li);

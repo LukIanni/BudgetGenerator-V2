@@ -45,20 +45,6 @@ app.get('/orcamento.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/views/orcamento.html'));
 });
 
-app.get('/download/:id', async (req, res) => {
-    const { id } = req.params;
-
-    let registro = await Produto.findByPk(id);
-    if (!registro) {
-        registro = await Servico.findByPk(id);
-    }
-
-    if (!registro || !registro.pdf_path) {
-        return res.status(404).send('PDF não encontrado');
-    }
-
-    res.download(registro.pdf_path);
-});
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
