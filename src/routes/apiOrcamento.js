@@ -1,98 +1,134 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const geminiService = require('../services/geminiService');
+const { generateBudgetPdf } = require('../services/pdfService');
 const Produto = require('../models/produto');
 const Servico = require('../models/servico');
-const geminiService = require('../services/geminiService');
-const { protect } = require('../middleware/authMiddleware');
 
-// Rota para salvar um novo orçamento de produto ou serviço
-router.post('/orcamentos', protect, async (req, res) => {
-  try {
-    const dados = req.body;
-    let novoOrcamento;
-
-    // Pega o ID do usuário do token JWT
+// Middleware para proteger rotas
+function protect(req, res, next) {
     const token = req.headers.authorization?.split(' ')[1];
-    let idUsuario;
-    
-    if (token) {
+    if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+
+    try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        idUsuario = decoded.id;
-    } else {
-        return res.status(401).json({ success: false, error: "Usuário não autenticado" });
+        req.userId = decoded.id;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: 'Token inválido' });
     }
+}
 
-    // Gerar resposta com Gemini
-    const iaResponse = await geminiService.generateBudgetResponse(dados);
+// Rota para gerar orçamento
+router.post('/', protect, async (req, res) => {
+    try {
+        const dados = req.body;
 
-    // Lógica para identificar se é um produto ou serviço
-    if (dados.nomeProduto) {
-      novoOrcamento = await Produto.create({
-        descricao: dados.nomeProduto,
-        horas: parseFloat(dados.horas),
-        valor_hora: parseFloat(dados.valorHora),
-        custo_extra: parseFloat(dados.custoExtra || 0),
-        resposta: iaResponse,
-        id_usuario: idUsuario
-      });
-    } else if (dados.nomeServico) {
-      novoOrcamento = await Servico.create({
-        nome_servico: dados.nomeServico,
-        materials: dados.materiaisServico,
-        custo: parseFloat(dados.custoServico),
-        lucro: parseFloat(dados.lucroServico),
-        resposta: iaResponse,
-        id_usuario: idUsuario
-      });
-    } else {
-      return res.status(400).json({ success: false, error: "Dados inválidos." });
+        // 1. Gerar resposta com IA
+        const iaResponse = await geminiService.generateBudgetResponse(dados);
+
+        // 2. Gerar PDF
+        const pdfPath = await generateBudgetPdf(dados, iaResponse);
+
+        // 3. Salvar no banco
+        let registro;
+        if (dados.nomeProduto) {
+            registro = await Produto.create({
+                descricao: dados.nomeProduto,
+                horas: parseFloat(dados.horas),
+                valor_hora: parseFloat(dados.valorHora),
+                custo_extra: parseFloat(dados.custoExtra || 0),
+                resposta: iaResponse,
+                pdf_path: pdfPath,
+                id_usuario: req.userId
+            });
+        } else {
+            registro = await Servico.create({
+                nome_servico: dados.nomeServico,
+                materials: dados.materiaisServico,
+                custo: parseFloat(dados.custoServico),
+                lucro: parseFloat(dados.lucroServico),
+                resposta: iaResponse,
+                pdf_path: pdfPath,
+                id_usuario: req.userId
+            });
+        }
+
+        // 4. Retorna link para download
+        res.status(200).json({
+            mensagem: 'Orçamento gerado com sucesso!',
+            resposta: iaResponse,
+            pdfDownloadUrl: `/download/${registro.id}?tipo=${dados.nomeProduto ? 'produto' : 'servico'}`
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ erro: 'Erro ao gerar orçamento' });
     }
-
-    res.status(200).json({
-      success: true,
-      orcamentoId: novoOrcamento.id,
-      resposta: iaResponse
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ mensagem: "Erro ao salvar o orçamento." });
-  }
 });
 
-// Rota para buscar um produto pelo ID
-router.get('/produtos/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const produto = await Produto.findByPk(id);
+// Rota para obter os orçamentos do usuário logado
+router.get('/meus-orcamentos', protect, async (req, res) => {
+    try {
+        const id_usuario = req.userId;
 
-    if (produto) {
-      res.status(200).json(produto);
-    } else {
-      res.status(404).json({ mensagem: "Produto não encontrado." });
+        // Busque os orçamentos de produtos e serviços do usuário
+        const orcamentosProdutos = await Produto.findAll({
+            where: { id_usuario },
+            attributes: ['id', 'descricao', 'createdAt', 'pdf_path'] // Selecione os campos necessários
+        });
+
+        const orcamentosServicos = await Servico.findAll({
+            where: { id_usuario },
+            attributes: ['id', 'nome_servico', 'createdAt', 'pdf_path'] // Selecione os campos necessários
+        });
+
+        // Combine os dois arrays em um só, adicionando um tipo para diferenciação
+        const todosOrcamentos = [
+            ...orcamentosProdutos.map(p => ({
+                id: p.id,
+                nome: p.descricao,
+                data: p.createdAt,
+                pdf_path: p.pdf_path,
+                tipo: 'produto'
+            })),
+            ...orcamentosServicos.map(s => ({
+                id: s.id,
+                nome: s.nome_servico,
+                data: s.createdAt,
+                pdf_path: s.pdf_path,
+                tipo: 'servico'
+            }))
+        ];
+
+        //ordene por data de criação
+        todosOrcamentos.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+        res.status(200).json(todosOrcamentos);
+    } catch (error) {
+        console.error('Erro ao buscar orçamentos do usuário:', error);
+        res.status(500).json({ erro: 'Erro ao buscar orçamentos' });
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ mensagem: "Erro ao buscar o produto." });
-  }
 });
 
-// Rota para buscar um serviço pelo ID
-router.get('/servicos/:id', async (req, res) => {
-  try {
+// Rota para download do PDF
+router.get('/download/:id', async (req, res) => {
     const { id } = req.params;
-    const servico = await Servico.findByPk(id);
+    const { tipo } = req.query;
 
-    if (servico) {
-      res.status(200).json(servico);
+    let registro;
+    if (tipo === 'produto') {
+        registro = await Produto.findByPk(id);
     } else {
-      res.status(404).json({ mensagem: "Serviço não encontrado." });
+        registro = await Servico.findByPk(id);
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ mensagem: "Erro ao buscar o serviço." });
-  }
+
+    if (!registro || !registro.pdf_path) {
+        return res.status(404).send('PDF não encontrado');
+    }
+
+    res.download(registro.pdf_path);
 });
 
 module.exports = router;

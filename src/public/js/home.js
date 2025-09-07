@@ -1,5 +1,9 @@
+// home.js - VERSÃO CORRIGIDA E COMPLETA
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
+    
+    // 1. Redireciona se o usuário não estiver logado
     if (!token) {
         window.location.href = '/';
         return;
@@ -30,9 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const photoUploadModal = document.getElementById('photoUploadModal');
     const photoUploadForm = document.getElementById('photoUploadForm');
     const cancelUploadBtn = document.getElementById('cancelUploadBtn');
-    const removePhotoBtn = document.getElementById('removePhotoBtn'); // Botão de remover foto
+    const removePhotoBtn = document.getElementById('removePhotoBtn');
 
-    // --- Funções ---
+    // --- Funções Auxiliares ---
     const showFeedback = (message, isError = false) => {
         feedbackMessageEl.textContent = message;
         feedbackMessageEl.className = `alert ${isError ? 'alert-danger' : 'alert-success'}`;
@@ -42,38 +46,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 3000);
     };
 
-    // --- Carregamento de Dados ---
+    // Função para buscar e exibir os orçamentos
+    async function fetchAndRenderBudgets() {
+        try {
+            const response = await fetch('/api/orcamento/meus-orcamentos', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Não autorizado. Por favor, faça login novamente.');
+                }
+                throw new Error('Erro ao buscar orçamentos.');
+            }
+
+            const orcamentos = await response.json();
+            budgetListEl.innerHTML = '';
+
+            if (orcamentos.length === 0) {
+                budgetListEl.innerHTML = `<li class="list-group-item d-flex justify-content-between corTextos align-items-center py-2">Nenhum orçamento encontrado.</li>`;
+                return;
+            }
+
+            orcamentos.forEach(orcamento => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between corTextos align-items-center py-2';
+                const dataFormatada = new Date(orcamento.data).toLocaleDateString('pt-BR');
+                li.innerHTML = `
+                    <div class="d-flex flex-column">
+                        <span class="fw-bold">${orcamento.nome}</span>
+                        <small class="text-muted">${dataFormatada}</small>
+                    </div>
+                    <div>
+                        <a href="/api/orcamento/download/${orcamento.id}?tipo=${orcamento.tipo}" 
+                           class="btn btn-primary btn-sm"
+                           target="_blank">
+                           <i class="bi bi-download"></i> Baixar PDF
+                        </a>
+                    </div>
+                `;
+                budgetListEl.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Erro:', error);
+            budgetListEl.innerHTML = `<li class="list-group-item d-flex justify-content-between text-danger align-items-center py-2">Erro ao carregar orçamentos.</li>`;
+        }
+    }
+
+    // --- Execução da Lógica ao Carregar a Página ---
+    // Carrega dados do perfil
     try {
-        const response = await fetch('/api/users/profile', {
+        const userResponse = await fetch('/api/users/profile', {
             headers: { 'Authorization': `Bearer ${token}` },
         });
 
-        if (response.ok) {
-            const user = await response.json();
+        if (userResponse.ok) {
+            const user = await userResponse.json();
             userNameEl.textContent = user.name;
             userEmailEl.textContent = user.email;
             if (user.photo) userImageEl.src = user.photo;
-
-            const produtos = user.Produtos || [];
-            const servicos = user.Servicos || [];
-            const budgets = [...produtos, ...servicos];
-
-            budgetListEl.innerHTML = '';
-            if (budgets.length === 0) {
-                budgetListEl.innerHTML = '<li class="list-group-item corTextos">Nenhum orçamento encontrado.</li>';
-            } else {
-                budgets.forEach(budget => {
-                    const isProduto = !!budget.descricao; // Verifica se é produto ou serviço
-                    const nome = isProduto ? budget.descricao : budget.nome_servico;
-                    const id = isProduto ? budget.id_produto : budget.id_servico;
-                    const type = isProduto ? 'produto' : 'servico';
-
-                    const li = document.createElement('li');
-                    li.className = 'list-group-item d-flex justify-content-between corTextos align-items-center py-2';
-                    li.innerHTML = `${nome} <a href="visualizarOrcamento.html?id=${id}&type=${type}" class="btn text-light corBotoes">Ver</a>`;
-                    budgetListEl.appendChild(li);
-                });
-            }
+            
+            // Chama a função para buscar e renderizar os orçamentos
+            await fetchAndRenderBudgets(); 
         } else {
             localStorage.removeItem('token');
             window.location.href = '/';
