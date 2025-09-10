@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const geminiService = require('../services/geminiService');
-const { generateBudgetPdf } = require('../services/pdfService');
 const Produto = require('../models/produto');
 const Servico = require('../models/servico');
 
@@ -28,10 +27,7 @@ router.post('/', protect, async (req, res) => {
         // 1. Gerar resposta com IA
         const iaResponse = await geminiService.generateBudgetResponse(dados);
 
-        // 2. Gerar PDF
-        const pdfPath = await generateBudgetPdf(dados, iaResponse);
-
-        // 3. Salvar no banco
+        // 2. Salvar no banco
         let registro;
         if (dados.nomeProduto) {
             registro = await Produto.create({
@@ -40,7 +36,6 @@ router.post('/', protect, async (req, res) => {
                 valor_hora: parseFloat(dados.valorHora),
                 custo_extra: parseFloat(dados.custoExtra || 0),
                 resposta: iaResponse,
-                pdf_path: pdfPath,
                 id_usuario: req.userId
             });
         } else {
@@ -50,16 +45,13 @@ router.post('/', protect, async (req, res) => {
                 custo: parseFloat(dados.custoServico),
                 lucro: parseFloat(dados.lucroServico),
                 resposta: iaResponse,
-                pdf_path: pdfPath,
                 id_usuario: req.userId
             });
         }
 
-        // 4. Retorna link para download
         res.status(200).json({
             mensagem: 'Orçamento gerado com sucesso!',
-            resposta: iaResponse,
-            pdfDownloadUrl: `/download/${registro.id}?tipo=${dados.nomeProduto ? 'produto' : 'servico'}`
+            resposta: iaResponse
         });
 
     } catch (error) {
@@ -112,70 +104,7 @@ router.get('/meus-orcamentos', protect, async (req, res) => {
     }
 });
 
-// Rota para visualizar o PDF
-router.get('/view/:id', protect, async (req, res) => {
-    const { id } = req.params;
-    const { tipo } = req.query;
 
-    let registro;
-    try {
-        if (tipo === 'produto') {
-            registro = await Produto.findOne({
-                where: { id_produto: id }
-            });
-        } else if (tipo === 'servico') {
-            registro = await Servico.findOne({
-                where: { id_servico: id }
-            });
-        } else {
-            return res.status(400).json({ erro: 'Tipo de orçamento inválido.' });
-        }
-
-        if (!registro || !registro.pdf_path) {
-            return res.status(404).json({ erro: 'PDF não encontrado ou não gerado para este orçamento.' });
-        }
-
-        // Envie o arquivo PDF com content-type apropriado para visualização
-        res.contentType('application/pdf');
-        res.sendFile(registro.pdf_path);
-
-    } catch (error) {
-        console.error('Erro ao tentar visualizar PDF:', error);
-        res.status(500).json({ erro: 'Erro interno ao tentar visualizar o PDF.' });
-    }
-});
-
-// Rota para download do PDF
-router.get('/download/:id', protect, async (req, res) => {
-    const { id } = req.params;
-    const { tipo } = req.query;
-
-    let registro;
-    try {
-        if (tipo === 'produto') {
-            registro = await Produto.findOne({
-                where: { id_produto: id }
-            });
-        } else if (tipo === 'servico') {
-            registro = await Servico.findOne({
-                where: { id_servico: id }
-            });
-        } else {
-            return res.status(400).json({ erro: 'Tipo de orçamento inválido.' });
-        }
-
-        if (!registro || !registro.pdf_path) {
-            return res.status(404).json({ erro: 'PDF não encontrado ou não gerado para este orçamento.' });
-        }
-
-        // Force o download do arquivo
-        res.download(registro.pdf_path, `${registro.nome || registro.nome_servico || 'orcamento'}-${id}.pdf`);
-
-    } catch (error) {
-        console.error('Erro ao tentar baixar PDF:', error);
-        res.status(500).json({ erro: 'Erro interno ao tentar baixar o PDF.' });
-    }
-});
 
 // Rota para visualizar a resposta de um orçamento específico
 router.get('/resposta/:id', protect, async (req, res) => {
