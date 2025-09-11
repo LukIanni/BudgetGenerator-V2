@@ -25,7 +25,7 @@ router.post('/', protect, async (req, res) => {
         const dados = req.body;
 
         // 1. Gerar resposta com IA
-        const iaResponse = await geminiService.generateBudgetResponse(dados);
+        const respostaIA = await geminiService.generateBudgetResponse(dados);
 
         // 2. Salvar no banco
         let registro;
@@ -35,7 +35,7 @@ router.post('/', protect, async (req, res) => {
                 horas: parseFloat(dados.horas),
                 valor_hora: parseFloat(dados.valorHora),
                 custo_extra: parseFloat(dados.custoExtra || 0),
-                resposta: iaResponse,
+                resposta: respostaIA,
                 id_usuario: req.userId
             });
         } else {
@@ -44,14 +44,16 @@ router.post('/', protect, async (req, res) => {
                 materials: dados.materiaisServico,
                 custo: parseFloat(dados.custoServico),
                 lucro: parseFloat(dados.lucroServico),
-                resposta: iaResponse,
+                resposta: respostaIA,
                 id_usuario: req.userId
             });
         }
 
         res.status(200).json({
             mensagem: 'Orçamento gerado com sucesso!',
-            resposta: iaResponse
+            resposta: respostaIA,
+            id: dados.nomeProduto ? registro.id_produto : registro.id_servico,
+            tipo: dados.nomeProduto ? 'produto' : 'servico'
         });
 
     } catch (error) {
@@ -143,6 +145,59 @@ router.get('/resposta/:id', protect, async (req, res) => {
 });
 
 // Rota para excluir um orçamento
+// Rota para atualizar a resposta de um orçamento
+router.put('/atualizar-resposta/:id', protect, async (req, res) => {
+    const { id } = req.params;
+    const { tipo } = req.query;
+    const { resposta } = req.body;
+
+    if (!resposta) {
+        return res.status(400).json({ erro: 'A resposta é obrigatória' });
+    }
+
+    try {
+        let atualizado = 0;
+
+        if (tipo === 'produto') {
+            atualizado = await Produto.update(
+                { resposta },
+                { 
+                    where: { 
+                        id_produto: id,
+                        id_usuario: req.userId 
+                    }
+                }
+            );
+        } else if (tipo === 'servico') {
+            atualizado = await Servico.update(
+                { resposta },
+                { 
+                    where: { 
+                        id_servico: id,
+                        id_usuario: req.userId 
+                    }
+                }
+            );
+        } else {
+            return res.status(400).json({ erro: 'Tipo de orçamento inválido.' });
+        }
+
+        if (atualizado[0] === 0) {
+            return res.status(404).json({ 
+                erro: 'Orçamento não encontrado ou você não tem permissão para editá-lo' 
+            });
+        }
+
+        res.json({ 
+            mensagem: 'Resposta atualizada com sucesso',
+            resposta: resposta
+        });
+    } catch (error) {
+        console.error('Erro ao atualizar resposta:', error);
+        res.status(500).json({ erro: 'Erro ao atualizar a resposta do orçamento' });
+    }
+});
+
 router.delete('/:id', protect, async (req, res) => {
     const { id } = req.params;
     const { tipo } = req.query;

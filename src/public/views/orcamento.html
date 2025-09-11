@@ -156,7 +156,8 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-          <button type="button" class="btn btn-primary" id="copiarResposta">Copiar Resposta</button>
+          <button type="button" class="btn btn-primary" id="editarRespostaBtn" disabled>Editar Resposta</button>
+          <button type="button" class="btn btn-info" id="copiarResposta">Copiar Resposta</button>
           <button type="button" class="btn btn-success" id="novoOrcamento">Novo Orçamento</button>
         </div>
       </div>
@@ -169,7 +170,13 @@
       const token = localStorage.getItem('token');
       if (!token) {
         window.location.href = '/'; // Redireciona para a página inicial/login se não houver token
+        return;
       }
+
+      // Limpa dados anteriores de edição
+      localStorage.removeItem('respostaParaEditar');
+      localStorage.removeItem('idOrcamentoAtual');
+      localStorage.removeItem('tipoOrcamentoAtual');
     });
 
     const respostaModal = new bootstrap.Modal(document.getElementById('respostaModal'));
@@ -178,6 +185,7 @@
     const modalFooter = document.querySelector('.modal-footer');
     const copiarBtn = document.getElementById('copiarResposta');
     const novoOrcamentoBtn = document.getElementById('novoOrcamento');
+    const editarRespostaBtn = document.getElementById('editarRespostaBtn');
 
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', async function (e) {
@@ -210,21 +218,14 @@
           loadingSpinner.classList.add('d-none');
           respostaContent.classList.remove('d-none');
           respostaContent.textContent = resposta.resposta;
+          
+          // Habilita o botão de editar após receber a resposta
+          editarRespostaBtn.disabled = false;
 
-          // Cria e adiciona o botão de download do PDF
-          let downloadBtn = document.getElementById('downloadPdfBtn');
-          if (downloadBtn) {
-            downloadBtn.remove();
-          }
-          if (resposta.pdfDownloadUrl) {
-            downloadBtn = document.createElement('a');
-            downloadBtn.id = 'downloadPdfBtn';
-            downloadBtn.className = 'btn btn-info';
-            downloadBtn.textContent = 'Baixar PDF';
-            downloadBtn.href = resposta.pdfDownloadUrl;
-            downloadBtn.target = '_blank';
-            modalFooter.insertBefore(downloadBtn, copiarBtn); // Insere antes do botão de copiar
-          }
+          // Armazena os dados para edição
+          localStorage.setItem('respostaParaEditar', resposta.resposta);
+          localStorage.setItem('idOrcamentoAtual', resposta.id);
+          localStorage.setItem('tipoOrcamentoAtual', resposta.tipo);
 
         } catch (err) {
           console.error('Erro:', err);
@@ -246,23 +247,33 @@
       });
     });
 
+    // Adiciona o evento de clique no botão de editar resposta
+    editarRespostaBtn.addEventListener('click', () => {
+      const respostaParaEditar = localStorage.getItem('respostaParaEditar');
+      const idOrcamento = localStorage.getItem('idOrcamentoAtual');
+      const tipoOrcamento = localStorage.getItem('tipoOrcamentoAtual');
+
+      if (respostaParaEditar && idOrcamento && tipoOrcamento) {
+        window.location.href = '/views/editarResposta.html';
+      } else {
+        alert('Não foi possível editar a resposta. Informações necessárias não encontradas.');
+      }
+    });
+
     novoOrcamentoBtn.addEventListener('click', () => {
       respostaModal.hide();
       document.querySelectorAll('form').forEach(form => form.reset());
-      const downloadBtn = document.getElementById('downloadPdfBtn');
-      if (downloadBtn) {
-        downloadBtn.remove(); // Remove o botão de download ao iniciar um novo orçamento
-      }
+      // Limpa dados de edição
+      localStorage.removeItem('respostaParaEditar');
+      localStorage.removeItem('idOrcamentoAtual');
+      localStorage.removeItem('tipoOrcamentoAtual');
     });
 
     document.getElementById('respostaModal').addEventListener('hidden.bs.modal', () => {
       loadingSpinner.classList.remove('d-none');
       respostaContent.classList.add('d-none');
       respostaContent.textContent = '';
-      const downloadBtn = document.getElementById('downloadPdfBtn');
-      if (downloadBtn) {
-        downloadBtn.remove(); // Remove o botão de download ao fechar o modal
-      }
+      editarRespostaBtn.disabled = true;
     });
   </script>
 </body>

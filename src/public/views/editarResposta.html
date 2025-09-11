@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Resposta - BudgetGenerator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+    <nav class="corFrame mb-4">
+        <div class="d-flex justify-content-around align-items-center p-3">
+            <a href="/" class="text-decoration-none corTextos">
+                <h2 class="m-0">BudgetGenerator</h2>
+            </a>
+            <div>
+                <button onclick="salvarEdicao()" class="btn text-light corBotoes me-2">Salvar</button>
+                <a href="/orcamento.html" class="btn text-light corBotoes">Voltar</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header corFrame">
+                <h4 class="card-title mb-0 corTextos">Editar Resposta do Orçamento</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="editorResposta" class="form-label">Edite a resposta conforme necessário:</label>
+                    <div id="editorResposta" class="form-control" contenteditable="true" style="min-height: 300px; white-space: pre-wrap;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/editarResposta.js"></script>
+</body>
+</html>
