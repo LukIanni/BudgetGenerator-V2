@@ -1,5 +1,3 @@
-
-
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
     
@@ -35,6 +33,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cancelUploadBtn = document.getElementById('cancelUploadBtn');
     const removePhotoBtn = document.getElementById('removePhotoBtn');
 
+    // Elementos de Orçamentos
+    const budgetListEl = document.getElementById('budgetList');
+    let meusOrcamentos = []; // Para armazenar os orçamentos buscados
+
     // --- Funções Auxiliares ---
     const showFeedback = (message, isError = false) => {
         feedbackMessageEl.textContent = message;
@@ -45,7 +47,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 3000);
     };
 
+    // --- Funções de Orçamentos ---
+    const carregarOrcamentos = async () => {
+        try {
+            const response = await fetch('/api/orcamento/meus-orcamentos', {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
 
+            if (!response.ok) {
+                throw new Error('Erro ao buscar orçamentos');
+            }
+
+            meusOrcamentos = await response.json();
+            renderizarOrcamentos();
+
+        } catch (error) {
+            console.error('Erro ao carregar orçamentos:', error);
+            budgetListEl.innerHTML = `<li class="list-group-item">Erro ao carregar orçamentos.</li>`;
+        }
+    };
+
+    const renderizarOrcamentos = () => {
+        budgetListEl.innerHTML = ''; // Limpa a lista
+
+        if (meusOrcamentos.length === 0) {
+            budgetListEl.innerHTML = `<li class="list-group-item d-flex justify-content-between corTextos align-items-center py-2">Nenhum orçamento encontrado.</li>`;
+            return;
+        }
+
+        meusOrcamentos.forEach(orcamento => {
+            const dataFormatada = new Date(orcamento.data).toLocaleDateString('pt-BR');
+            const item = document.createElement('li');
+            item.className = 'list-group-item d-flex justify-content-between corTextos align-items-center py-2';
+            item.innerHTML = `
+                <div>
+                    <strong>${orcamento.nome}</strong>
+                    <small class="d-block text-muted">Criado em: ${dataFormatada}</small>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-primary view-btn me-2" data-id="${orcamento.id}" data-tipo="${orcamento.tipo}">Visualizar/Editar</button>
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="${orcamento.id}" data-tipo="${orcamento.tipo}">Excluir</button>
+                </div>
+            `;
+            budgetListEl.appendChild(item);
+        });
+    };
 
     // --- Execução da Lógica ao Carregar a Página ---
     // Carrega dados do perfil
@@ -68,6 +114,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.removeItem('token');
         window.location.href = '/';
     }
+
+    // Carrega orçamentos
+    carregarOrcamentos();
 
     // --- Event Listeners ---
     logoutBtn.addEventListener('click', () => {
@@ -198,6 +247,49 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             alert('Erro de conexão ao fazer upload.');
+        }
+    });
+
+    // Event Listener para Orçamentos
+    budgetListEl.addEventListener('click', async (e) => {
+        const target = e.target;
+        const id = target.dataset.id;
+        const tipo = target.dataset.tipo;
+
+        // Botão de Excluir
+        if (target.classList.contains('delete-btn')) {
+            const budgetName = target.closest('li').querySelector('strong').textContent;
+            if (confirm(`Tem certeza que deseja excluir o orçamento "${budgetName}"?`)) {
+                try {
+                    const response = await fetch(`/api/orcamento/${id}?tipo=${tipo}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Falha ao excluir');
+                    }
+                    
+                    // Remove o item da lista na UI
+                    target.closest('li').remove();
+                    alert('Orçamento excluído com sucesso!');
+
+                } catch (error) {
+                    console.error('Erro ao excluir:', error);
+                    alert('Erro ao excluir o orçamento.');
+                }
+            }
+        }
+
+        // Botão de Visualizar/Editar
+        if (target.classList.contains('view-btn')) {
+            const orcamentoParaEditar = meusOrcamentos.find(o => o.id == id && o.tipo == tipo);
+            if (orcamentoParaEditar) {
+                localStorage.setItem('respostaParaEditar', orcamentoParaEditar.resposta);
+                localStorage.setItem('idOrcamentoAtual', orcamentoParaEditar.id);
+                localStorage.setItem('tipoOrcamentoAtual', orcamentoParaEditar.tipo);
+                window.location.href = '/views/editarResposta.html';
+            }
         }
     });
 });
