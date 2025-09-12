@@ -3,14 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const respostaOriginal = localStorage.getItem('respostaParaEditar');
     
     if (respostaOriginal) {
-        editorResposta.textContent = respostaOriginal;
+        editorResposta.innerHTML = respostaOriginal;
     } else {
         window.location.href = '/orcamento.html';
     }
 });
 
 function salvarEdicao() {
-    const respostaEditada = document.getElementById('editorResposta').textContent;
+    const respostaEditada = document.getElementById('editorResposta').innerHTML;
     const idOrcamento = localStorage.getItem('idOrcamentoAtual');
     const tipoOrcamento = localStorage.getItem('tipoOrcamentoAtual');
     const token = localStorage.getItem('token');

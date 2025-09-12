@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const respostaModalBody = document.getElementById('respostaModalBody');
             const editarRespostaBtn = document.getElementById('editarRespostaBtn');
             
-            respostaModalBody.textContent = result.resposta;
+            respostaModalBody.innerHTML = result.resposta;
             
             // Configura o botão de edição
             editarRespostaBtn.onclick = () => {
