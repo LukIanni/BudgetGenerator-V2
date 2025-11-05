@@ -35,7 +35,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Elementos de Orçamentos
     const budgetListEl = document.getElementById('budgetList');
+    const paginationContainer = document.getElementById('paginationContainer');
+    const paginationControls = document.getElementById('paginationControls');
     let meusOrcamentos = []; // Para armazenar os orçamentos buscados
+    let currentPage = 1;
+    const itemsPerPage = 5;
 
     // --- Funções Auxiliares ---
     const showFeedback = (message, isError = false) => {
@@ -59,7 +63,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             meusOrcamentos = await response.json();
-            renderizarOrcamentos();
+            meusOrcamentos.sort((a, b) => new Date(b.data) - new Date(a.data));
+            renderizarOrcamentos(1);
 
         } catch (error) {
             console.error('Erro ao carregar orçamentos:', error);
@@ -67,15 +72,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    const renderizarOrcamentos = () => {
+    const renderizarOrcamentos = (page = 1) => {
+        currentPage = page;
         budgetListEl.innerHTML = ''; // Limpa a lista
 
         if (meusOrcamentos.length === 0) {
             budgetListEl.innerHTML = `<li class="list-group-item d-flex justify-content-between corTextos align-items-center py-2">Nenhum orçamento encontrado.</li>`;
+            paginationContainer.style.display = 'none';
             return;
         }
 
-        meusOrcamentos.forEach(orcamento => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedItems = meusOrcamentos.slice(startIndex, endIndex);
+
+        paginatedItems.forEach(orcamento => {
             const dataFormatada = new Date(orcamento.data).toLocaleDateString('pt-BR');
             const item = document.createElement('li');
             item.className = 'list-group-item d-flex justify-content-between corTextos align-items-center py-2';
@@ -91,6 +102,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
             budgetListEl.appendChild(item);
         });
+
+        renderizarControlesPaginacao();
+    };
+
+    const renderizarControlesPaginacao = () => {
+        paginationControls.innerHTML = '';
+        const pageCount = Math.ceil(meusOrcamentos.length / itemsPerPage);
+
+        if (pageCount <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
+
+        paginationContainer.style.display = 'block';
+
+        // Botão "Anterior"
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Anterior</a>`;
+        paginationControls.appendChild(prevLi);
+
+        // Botões de página
+        for (let i = 1; i <= pageCount; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            pageLi.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+            paginationControls.appendChild(pageLi);
+        }
+
+        // Botão "Próximo"
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === pageCount ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Próximo</a>`;
+        paginationControls.appendChild(nextLi);
     };
 
     // --- Execução da Lógica ao Carregar a Página ---
@@ -270,9 +315,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         throw new Error('Falha ao excluir');
                     }
                     
-                    // Remove o item da lista na UI
-                    target.closest('li').remove();
                     alert('Orçamento excluído com sucesso!');
+                    carregarOrcamentos();
 
                 } catch (error) {
                     console.error('Erro ao excluir:', error);
@@ -289,6 +333,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('idOrcamentoAtual', orcamentoParaEditar.id);
                 localStorage.setItem('tipoOrcamentoAtual', orcamentoParaEditar.tipo);
                 window.location.href = '/views/editarResposta.html';
+            }
+        }
+    });
+
+    paginationControls.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = e.target;
+        if (target.tagName === 'A' && !target.parentElement.classList.contains('disabled')) {
+            const page = parseInt(target.dataset.page, 10);
+            if (page) {
+                renderizarOrcamentos(page);
             }
         }
     });

@@ -73,3 +73,6 @@ RELATORIO_CONTRIBUICOES_Ianni.md
 # Ignore local environment files
 .env
 css_backup/
+
+# Ignore a aplicação React Native Expo
+BudgetgeneratorAPP/
