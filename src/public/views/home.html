@@ -74,11 +74,15 @@
                         </nav>
                     </div>
                 </div>
+                <!-- Ad Container -->
+                <div id="adContainer" style="display: none; margin-top: 20px;">
+                    <div class="ad-placeholder">Espaço para Anúncio</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Confirmação de Exclusão -->
+    <!-- Modal de Confirmação de Exclusão de Conta -->
     <div id="deleteConfirmModal" class="modal-backdrop">
         <div class="modal-content-custom">
             <h4>Tem certeza que quer ir?</h4>
@@ -86,6 +90,18 @@
             <div class="modal-buttons">
                 <button id="keepAccountBtn" class="btn btn-primary btn-lg">Quero Ficar!</button>
                 <button id="confirmDeleteBtn" class="btn btn-outline-danger">Excluir Mesmo Assim</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão de Orçamento -->
+    <div id="deleteBudgetConfirmModal" class="modal-backdrop">
+        <div class="modal-content-custom">
+            <div class="ad-placeholder mb-3">Espaço para Anúncio</div>
+            <p>Deseja realmente excluir?</p>
+            <div class="modal-buttons">
+                <button id="confirmDeleteBudgetBtn" class="btn btn-danger">Sim</button>
+                <button id="cancelDeleteBudgetBtn" class="btn btn-secondary">Não</button>
             </div>
         </div>
     </div>

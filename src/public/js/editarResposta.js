@@ -1,12 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     const editorResposta = document.getElementById('editorResposta');
     const respostaOriginal = localStorage.getItem('respostaParaEditar');
+    const saveConfirmModal = document.getElementById('saveConfirmModal');
+    const confirmSaveBtn = document.getElementById('confirmSaveBtn');
     
     if (respostaOriginal) {
         editorResposta.innerHTML = respostaOriginal;
     } else {
         window.location.href = '/orcamento.html';
     }
+
+    confirmSaveBtn.addEventListener('click', () => {
+        window.location.href = '/home';
+    });
 });
 
 function salvarEdicao() {
@@ -35,13 +41,14 @@ function salvarEdicao() {
         return response.json();
     })
     .then(data => {
-        alert('Resposta atualizada com sucesso!');
         // Limpa os dados do localStorage
         localStorage.removeItem('respostaParaEditar');
         localStorage.removeItem('idOrcamentoAtual');
         localStorage.removeItem('tipoOrcamentoAtual');
-        // Redireciona de volta para a página de orçamentos
-        window.location.href = '/orcamento.html';
+        
+        // Mostra o modal de confirmação
+        const saveConfirmModal = document.getElementById('saveConfirmModal');
+        saveConfirmModal.style.display = 'flex';
     })
     .catch(error => {
         console.error('Erro:', error);

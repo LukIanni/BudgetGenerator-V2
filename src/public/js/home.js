@@ -20,11 +20,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cancelUpdateBtn = document.getElementById('cancelUpdateBtn');
     const feedbackMessageEl = document.getElementById('feedbackMessage');
 
-    // Modal de exclusão
+    // Modal de exclusão de conta
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     const deleteConfirmModal = document.getElementById('deleteConfirmModal');
     const keepAccountBtn = document.getElementById('keepAccountBtn');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    // Modal de exclusão de orçamento
+    const deleteBudgetConfirmModal = document.getElementById('deleteBudgetConfirmModal');
+    const confirmDeleteBudgetBtn = document.getElementById('confirmDeleteBudgetBtn');
+    const cancelDeleteBudgetBtn = document.getElementById('cancelDeleteBudgetBtn');
+    let budgetToDelete = null;
 
     // Modal de upload de foto
     const changePhotoBtn = document.getElementById('changePhotoBtn');
@@ -40,6 +46,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let meusOrcamentos = []; // Para armazenar os orçamentos buscados
     let currentPage = 1;
     const itemsPerPage = 5;
+
+    // Ad Container
+    const adContainer = document.getElementById('adContainer');
 
     // --- Funções Auxiliares ---
     const showFeedback = (message, isError = false) => {
@@ -170,11 +179,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     toggleUpdateFormBtn.addEventListener('click', () => {
-        updateFormContainer.style.display = updateFormContainer.style.display === 'block' ? 'none' : 'block';
+        const isFormVisible = updateFormContainer.style.display === 'block';
+        updateFormContainer.style.display = isFormVisible ? 'none' : 'block';
+        adContainer.style.display = isFormVisible ? 'none' : 'block';
     });
 
     cancelUpdateBtn.addEventListener('click', () => {
         updateFormContainer.style.display = 'none';
+        adContainer.style.display = 'none';
         updateForm.reset();
     });
 
@@ -205,7 +217,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showFeedback('Dados atualizados com sucesso!');
                 if (result.email) userEmailEl.textContent = result.email;
                 updateForm.reset();
-                setTimeout(() => { updateFormContainer.style.display = 'none'; }, 2000);
+                setTimeout(() => { 
+                    updateFormContainer.style.display = 'none'; 
+                    adContainer.style.display = 'none';
+                }, 2000);
             } else {
                 showFeedback(result.message || 'Erro ao atualizar.', true);
             }
@@ -214,7 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Lógica do Modal de Exclusão
+    // Lógica do Modal de Exclusão de Conta
     deleteAccountBtn.addEventListener('click', () => { deleteConfirmModal.style.display = 'flex'; });
     keepAccountBtn.addEventListener('click', () => { deleteConfirmModal.style.display = 'none'; });
     confirmDeleteBtn.addEventListener('click', async () => {
@@ -235,6 +250,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             alert('Erro de conexão.');
             deleteConfirmModal.style.display = 'none';
+        }
+    });
+
+    // Lógica do Modal de Exclusão de Orçamento
+    cancelDeleteBudgetBtn.addEventListener('click', () => {
+        deleteBudgetConfirmModal.style.display = 'none';
+        budgetToDelete = null;
+    });
+
+    confirmDeleteBudgetBtn.addEventListener('click', async () => {
+        if (!budgetToDelete) return;
+
+        const { id, tipo } = budgetToDelete;
+
+        try {
+            const response = await fetch(`/api/orcamento/${id}?tipo=${tipo}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+
+            if (!response.ok) {
+                throw new Error('Falha ao excluir');
+            }
+            
+            alert('Orçamento excluído com sucesso!');
+            carregarOrcamentos();
+            deleteBudgetConfirmModal.style.display = 'none';
+            budgetToDelete = null;
+
+        } catch (error) {
+            console.error('Erro ao excluir:', error);
+            alert('Erro ao excluir o orçamento.');
+            deleteBudgetConfirmModal.style.display = 'none';
         }
     });
 
@@ -303,26 +351,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Botão de Excluir
         if (target.classList.contains('delete-btn')) {
-            const budgetName = target.closest('li').querySelector('strong').textContent;
-            if (confirm(`Tem certeza que deseja excluir o orçamento "${budgetName}"?`)) {
-                try {
-                    const response = await fetch(`/api/orcamento/${id}?tipo=${tipo}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${token}` },
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Falha ao excluir');
-                    }
-                    
-                    alert('Orçamento excluído com sucesso!');
-                    carregarOrcamentos();
-
-                } catch (error) {
-                    console.error('Erro ao excluir:', error);
-                    alert('Erro ao excluir o orçamento.');
-                }
-            }
+            budgetToDelete = { id, tipo };
+            deleteBudgetConfirmModal.style.display = 'flex';
         }
 
         // Botão de Visualizar/Editar
