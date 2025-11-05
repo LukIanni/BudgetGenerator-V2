@@ -1,8 +1,16 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const toastContainer = document.querySelector('.toast-container');
+    const rememberMeCheckbox = document.getElementById('rememberMe');
+    const loginEmailInput = document.getElementById('loginEmail');
+
+    // Check for remembered email on page load
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+        loginEmailInput.value = rememberedEmail;
+        rememberMeCheckbox.checked = true;
+    }
 
     const showToast = (message, type = 'danger') => {
         const toastId = 'toast-' + Date.now();
@@ -75,6 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+
+            // Handle "Remember me" functionality
+            if (rememberMeCheckbox.checked) {
+                // Storing password in local storage is insecure. Only storing email.
+                localStorage.setItem('rememberedEmail', email);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+            }
 
             const data = { email, password };
 

@@ -3,7 +3,7 @@
     background-color: #BCDBBC;
 }
 .brand-color {
-    color: #228F2F;
+    color: #228B22; /* Forest Green */
 }
 .btn-custom {
     background-color: #113815;
@@ -37,7 +37,7 @@
   -webkit-backdrop-filter: blur(8px);
   border-bottom:1px solid rgba(255,255,255,0.25);
 }
-.navbar-brand{color:#fff!important;font-weight:700;font-size:1.2rem}
+.navbar-brand{font-weight:700;font-size:1.2rem}
 .navbar-custom .nav-link{
   color:#fff; font-weight:500; margin-left:15px; transition:.3s
 }
