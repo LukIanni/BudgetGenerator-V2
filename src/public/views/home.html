@@ -61,7 +61,17 @@
                 <div class="card">
                     <div class="card-header corTextos card-header-destaque">
                         Orçamentos Gerados
+                        <button id="toggleChartBtn" class="btn btn-sm text-light corBotoes">
+                            <i class="bi bi-bar-chart-fill me-1"></i> Visualizar Gráficos
+                        </button>
                     </div>
+                    <div id="chartContainer" class="p-3" style="display: none;">
+                        <canvas id="budgetChart"></canvas>
+                        <hr>
+                        <p class="text-center text-muted">Gráfico demonstrativo de orçamentos.</p>
+                    </div>
+
+                    <div id="listContainer">
                     <ul class="list-group list-group-flush" id="budgetList">
                         <li class="list-group-item d-flex justify-content-between corTextos align-items-center py-2">
                             Nenhum orçamento encontrado.
@@ -73,6 +83,7 @@
                             </ul>
                         </nav>
                     </div>
+                </div>
                 </div>
                 <!-- Ad Container -->
                 <div id="adContainer" style="display: none; margin-top: 20px;">
@@ -142,7 +153,7 @@
             </div>
         </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/home.js"></script>
 </body>
