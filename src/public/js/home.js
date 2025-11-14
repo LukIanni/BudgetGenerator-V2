@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Ad Container
     const adContainer = document.getElementById('adContainer');
 
+   
+
     // --- Funções Auxiliares ---
     const showFeedback = (message, isError = false) => {
         feedbackMessageEl.textContent = message;
