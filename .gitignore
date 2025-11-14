@@ -1,79 +1,54 @@
-# Ignore node_modules, if using Node.js
-node_modules/
-
-# Ignore Python virtual environments
-venv/
-.env/
-
-# Ignore VS Code settings and workspace files
-.vscode/
-*.code-workspace
-
-# Ignore OS generated files
-.DS_Store
-Thumbs.db
-
-# Ignore log files
-*.log
-
-# Ignore build output
-/dist/
-/build/
-
-# Ignore coverage reports
-coverage/
-
-# Ignore temporary files
-*.tmp
-*.swp
-*.swo
-
-# Ignore compiled files
-*.pyc
-__pycache__/
-
-# Ignore package lock files
-package-lock.json
-yarn.lock
-
-# Ignore HTML temporary files
-*.bak
-
-# Ignore Windows specific files
-Desktop.ini
-
-# Added by Gemini
-# Archives
-*.zip
-*.tar.gz
-*.rar
-
-# IDE/Editor specific files
-*.sublime-project
-*.sublime-workspace
-.idea/
-
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-
-# Database files
-*.sqlite3
-*.db
-
-# Local environment variables
-*.env.*local
-
-# Private keys
-*.pem
-*.key
-# Arquivo de relatório de contribuições pessoal
-RELATORIO_CONTRIBUICOES.md
-RELATORIO_CONTRIBUICOES_Ianni.md
-# Ignore local environment files
+# ------------------------------------
+# 1. DEPENDÊNCIAS DE NODE E LOGS
+# ------------------------------------
+/node_modules
+/package-lock.json # Remova se usar yarn!
+/yarn.lock         # Remova se usar npm!
+/npm-debug.log*
+/yarn-error.log*
+.eslintcache
+.pnpm-store
+# Se você tiver chaves ou variáveis de ambiente sensíveis
 .env
-css_backup/
+.env.local
 
-# Ignore a aplicação React Native Expo
-BudgetgeneratorAPP/
-BudgetgeneratorAPP2/
+# ------------------------------------
+# 2. ARQUIVOS DO REACT NATIVE / EXPO
+# ------------------------------------
+# Cache do Metro Bundler e do Expo
+.expo/
+.expo-shared/
+/dist/
+/web-build/
+
+# Build e iOS/Android (se for fazer o build nativo no futuro)
+/android/build
+/android/.gradle
+/android/app/build
+/ios/build
+/ios/Pods/
+
+# ------------------------------------
+# 3. ARQUIVOS DE SISTEMA OPERACIONAL (Windows/Linux)
+# ------------------------------------
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# macOS (Mesmo que não usem, é bom incluir)
+.DS_Store
+
+# ------------------------------------
+# 4. ARQUIVOS DE EDITOR (VS Code e outros)
+# ------------------------------------
+.vscode/*
+!/.vscode/settings.json # Manter configurações compartilhadas
+!/.vscode/tasks.json
+!/.vscode/launch.json
+!/.vscode/extensions.json
+*.sublime-workspace
+
+# ------------------------------------
+# 5. ARQUIVOS DO TYPESCRIPT
+# ------------------------------------
+*.tsbuildinfo
