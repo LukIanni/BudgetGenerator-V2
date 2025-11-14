@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const e = require("cors");
 
 class GeminiService {
     constructor() {
@@ -31,7 +32,7 @@ Horas: ${data.horas}h
 Valor da Hora: R$ ${data.valorHora}
 Custo Extra: R$ ${data.custoExtra || 0}
 `;
-            } else {
+            } else if (data.nomeServico) {
                 prompt = `Gere uma resposta formal e profissional para um orçamento de serviço.
 Retorne apenas texto puro (plain text). NÃO use Markdown, elementos de formatação (por exemplo: **negrito**, _itálico_), listas com marcadores, nem caracteres asterisco (*) no conteúdo.
 Estruture a resposta em seções claras separadas por linhas em branco usando títulos em maiúsculas (por exemplo: TITULO, DESCRIÇÃO, ESPECIFICAÇÕES, CÁLCULO DO ORÇAMENTO, VALOR TOTAL, CONDIÇÕES GERAIS, OBSERVAÇÕES, CONTATO).
