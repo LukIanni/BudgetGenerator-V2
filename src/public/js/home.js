@@ -380,3 +380,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+// ARQUIVO: home.js
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Carregado - Iniciando configuração dos gráficos');
+
+    const toggleBtn = document.getElementById('toggleChartBtn');
+    const dashboardContainer = document.getElementById('dashboardContainer');
+    const backBtn = document.getElementById('backToMetricsBtn');
+
+    console.log('Elementos encontrados:', {
+        toggleBtn: !!toggleBtn,
+        dashboardContainer: !!dashboardContainer,
+        backBtn: !!backBtn
+    });
+
+    if (toggleBtn && dashboardContainer) {
+        toggleBtn.addEventListener('click', () => {
+            console.log('Botão clicado - Estado atual:', dashboardContainer.style.display);
+            
+            if (dashboardContainer.style.display === 'none') {
+                dashboardContainer.style.display = 'block';
+                loadAndDrawMetricsCards();
+                toggleBtn.innerHTML = '<i class="bi bi-bar-chart-fill me-1"></i> Ocultar Gráficos';
+                console.log('Gráficos mostrados');
+            } else {
+                dashboardContainer.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="bi bi-bar-chart-fill me-1"></i> Visualizar Gráficos';
+                console.log('Gráficos ocultados');
+            }
+        });
+    } else {
+        console.error('Elementos não encontrados:', {
+            toggleBtn: toggleBtn,
+            dashboardContainer: dashboardContainer
+        });
+    }
+
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            console.log('Voltando para métricas');
+            document.getElementById('metricsCardsContainer').style.display = 'flex';
+            document.getElementById('individualChartWrapper').style.display = 'none';
+        });
+    } else {
+        console.error('Botão voltar não encontrado');
+    }
+});

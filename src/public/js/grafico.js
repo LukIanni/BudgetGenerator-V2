@@ -1,225 +1,297 @@
-    // ARQUIVO: grafico.js
-
-// ARQUIVO: grafico.js (Agora, lógica de Dashboard)
+// ARQUIVO: grafico.js
 
 const API_BASE = '/api/orcamento';
 
 // ====================================================================
-// FUNÇÃO PRINCIPAL: 1. Carrega dados e 2. Desenha Cards
+// FUNÇÃO PRINCIPAL: Carrega dados e Desenha Cards
 // ====================================================================
 async function loadAndDrawMetricsCards() {
     const token = localStorage.getItem('token');
     if (!token) {
-        document.getElementById('metricsCardsContainer').innerHTML = '<p class="text-danger">Autenticação necessária.</p>';
-        return;
-    }
-    
-    // Fazendo múltiplas requisições em paralelo
-    const [resumoContagemResponse, custoMedioResponse, totaisAcumuladosResponse ] = await Promise.all([
-        fetch(`${API_BASE}/resumo-contagem`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${API_BASE}/custo-medio`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${API_BASE}/totais-acumulados`, { headers: { 'Authorization': `Bearer ${token}` } }), // NOVO FETCH
-    ]);
-
-    if (!resumoContagemResponse.ok || !custoMedioResponse.ok) {
-        document.getElementById('metricsCardsContainer').innerHTML = '<p class="text-danger">Erro ao carregar dados do dashboard.</p>';
+        alert('Você precisa fazer login novamente.');
+        window.location.href = '/login.html';
         return;
     }
 
-    const resumoContagem = await resumoContagemResponse.json();
-    const custoMedio = await custoMedioResponse.json();
-    const totaisAcumulados = await totaisAcumuladosResponse.json(); // NOVO DADO
-    
-    // Função auxiliar para formatar como R$
-    const formatarRS = (valor) => parseFloat(valor).toFixed(2).replace('.', ',');
+    try {
+        const [
+            resumoContagemResponse,
+            produtoResponse,
+            totaisAcumuladosResponse,
+            valorTotalServicosResponse
+        ] = await Promise.all([
+            fetch(`${API_BASE}/resumo-contagem`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/produtos-mais-orcados`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/totais-acumulados`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/valor-total-servicos`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
 
+        if (
+            resumoContagemResponse.status === 401 ||
+            produtoResponse.status === 401 ||
+            totaisAcumuladosResponse.status === 401 ||
+            valorTotalServicosResponse.status === 401
+        ) {
+            alert('Sua sessão expirou. Faça login novamente.');
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+            return;
+        }
 
-    // 1. Prepara os Dados dos Cards
-    const cardsData = [
-        { 
-            id: 'total-orcamentos', 
-            icon: 'bi-list-ul', 
-            label: 'Orçamentos Totais', 
-            value: resumoContagem.Total,
-            unit: 'unidades',
-            color: 'primary'
-        },
-        { 
-            id: 'custo-medio-produto', 
-            icon: 'bi-currency-dollar', 
-            label: 'Custo Médio Produto', 
-            value: parseFloat(custoMedio.Produto).toFixed(2).replace('.', ','), 
-            unit: 'R$',
-            color: 'success'
-        },
-        { 
-            id: 'contagem-servico', 
-            icon: 'bi-tools', 
-            label: 'Orçamentos Serviço', 
-            value: resumoContagem.Servico, 
-            unit: 'unidades',
-            color: 'warning'
-        },
-        { 
-            id: 'custo-total-acumulado', 
-            icon: 'bi-box-seam', 
-            label: 'Custo Total Acumulado', 
-            value: formatarRS(totaisAcumulados.TotalCusto), 
-            unit: 'R$',
-            color: 'danger', // Vermelho para custo
-            data: totaisAcumulados // Passa os dados para o gráfico de detalhe
-        },
-        { 
-            id: 'lucro-total-acumulado', 
-            icon: 'bi-piggy-bank', 
-            label: 'Lucro Total Bruto', 
-            value: formatarRS(totaisAcumulados.TotalLucro), 
-            unit: 'R$',
-            color: 'info', // Ciano para lucro
-            data: totaisAcumulados
-        },
-    ];
+        if (
+            !resumoContagemResponse.ok ||
+            !produtoResponse.ok ||
+            !totaisAcumuladosResponse.ok ||
+            !valorTotalServicosResponse.ok
+        ) {
+            throw new Error('Erro ao carregar dados');
+        }
 
-    
-    
-    // 2. Desenha os Cards no Container
-    const container = document.getElementById('metricsCardsContainer');
-    container.innerHTML = cardsData.map(data => `
-        <div class="col-md-4">
-            <div class="card bg-${data.color} text-white shadow metric-card" data-metric-id="${data.id}">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <i class="bi ${data.icon} fs-3 me-3"></i>
-                        <div>
-                            <p class="card-text mb-0">${data.label}</p>
-                            <h4 class="card-title">${data.unit} ${data.value}</h4>
-                        </div>
+        const resumoContagem = await resumoContagemResponse.json();
+        const produtosMaisOrcados = await produtoResponse.json();
+        const totaisAcumulados = await totaisAcumuladosResponse.json();
+        const valorTotalServicos = await valorTotalServicosResponse.json();
+
+        const formatarRS = (valor) =>
+            parseFloat(valor).toFixed(2).replace('.', ',');
+
+        const cardsData = [
+            {
+                id: 'total-orcamentos',
+                icon: 'bi-list-ul',
+                label: 'Orçamentos Totais',
+                value: resumoContagem.Total,
+                unit: 'unidades',
+                color: 'primary'
+            },
+            {
+                id: 'produtos-mais-orcados',
+                icon: 'bi-cart-check',
+                label: 'Produtos Mais Orçados',
+                value: produtosMaisOrcados.length > 0
+                    ? produtosMaisOrcados[0].contagem.toLocaleString('pt-BR')
+                    : '0',
+                subtitle: produtosMaisOrcados.length > 0
+                    ? produtosMaisOrcados[0].produto
+                    : '-',
+                unit: 'orçamentos',
+                color: 'primary'
+            },
+            {
+    id: 'valor-total-servicos',
+    icon: 'bi-tools',
+    label: 'Valor Total em Serviços',
+    value: formatarRS(valorTotalServicos.valorTotal),
+    subtitle: `${valorTotalServicos.quantidadeServicos} serviços (${valorTotalServicos.variacaoPercentual.toFixed(1)}% vs anterior)`,
+    unit: 'R$',
+    color: 'warning'
+},
+            {
+                id: 'custo-total-acumulado',
+                icon: 'bi-box-seam',
+                label: 'Custo Total Acumulado',
+                value: formatarRS(totaisAcumulados.TotalCusto),
+                unit: 'R$',
+                color: 'danger',
+                data: totaisAcumulados
+            },
+            {
+                id: 'lucro-total-acumulado',
+                icon: 'bi-piggy-bank',
+                label: 'Lucro Total Bruto',
+                value: formatarRS(totaisAcumulados.TotalLucro),
+                unit: 'R$',
+                color: 'info',
+                data: totaisAcumulados
+            },
+        ];
+
+        // No seu grafico.js, atualize a parte que gera os cards:
+// No seu grafico.js, atualize a parte que gera os cards:
+
+const container = document.getElementById('metricsCardsContainer');
+container.innerHTML = cardsData.map(data => `
+    <div class="col-md-4">
+        <div class="card bg-${data.color} text-white shadow metric-card" data-metric-id="${data.id}">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi ${data.icon} fs-3 me-3 flex-shrink-0"></i>
+                    <div class="flex-grow-1">
+                        <p class="card-text mb-1" style="font-size: 0.85rem; line-height: 1.2;">${data.label}</p>
+                        <h4 class="card-title mb-0" style="font-size: 1.4rem;">${data.value} ${data.unit}</h4>
                     </div>
-                    <small class="text-white-50">Clique para detalhar</small>
                 </div>
+                ${data.subtitle ? `<small class="mt-auto mb-1" style="font-size: 0.75rem; line-height: 1.1;">${data.subtitle}</small>` : ''}
+                <small class="text-white-50 mt-auto" style="font-size: 0.7rem;">Clique para detalhar</small>
             </div>
         </div>
-    `).join('');
+    </div>
+`).join('');
 
-    // 3. Adiciona Listeners aos Cards
-    document.querySelectorAll('.metric-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const metricId = this.getAttribute('data-metric-id');
-            // Chama a função que desenha o gráfico individual
-            drawIndividualChart(metricId, resumoContagem, custoMedio); 
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('click', function () {
+                const metricId = this.getAttribute('data-metric-id');
+                drawIndividualChart(metricId, resumoContagem, produtosMaisOrcados, totaisAcumulados, valorTotalServicos);
+            });
         });
-    });
+
+    } catch (err) {
+        console.error(err);
+        alert('Falha ao carregar métricas.');
+    }
 }
 
 // ====================================================================
 // FUNÇÃO DE DETALHE: Desenha o Gráfico Individual
 // ====================================================================
-
-function drawIndividualChart(metricId, contagemData, custoData) {
-    // 1. Esconde os cards e mostra o wrapper do gráfico
+function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totaisAcumulados, valorTotalServicos) {
     document.getElementById('metricsCardsContainer').style.display = 'none';
     document.getElementById('individualChartWrapper').style.display = 'block';
 
-    let labels, data, title;
-    
-    // Define os dados baseados no card clicado (metricId)
+    let labels, data, title, chartType;
+
     switch (metricId) {
         case 'total-orcamentos':
             labels = ['Produto', 'Serviço'];
             data = [contagemData.Produto, contagemData.Servico];
             title = 'Distribuição de Orçamentos (Produto vs. Serviço)';
+            chartType = 'doughnut';
             break;
-        case 'custo-medio-produto':
-            // Isso requereria uma nova rota no backend para detalhar custos de produtos,
-            // mas faremos um gráfico simples por enquanto.
-            labels = ['Produto'];
-            data = [parseFloat(custoData.Produto)];
-            title = 'Custo Médio do Produto';
+
+        case 'produtos-mais-orcados':
+            const dadosOrdenados = produtosMaisOrcados
+                .sort((a, b) => b.contagem - a.contagem)
+                .slice(0, 15);
+
+            labels = dadosOrdenados.map(item => item.produto);
+            data = dadosOrdenados.map(item => item.contagem);
+            title = 'Produtos Mais Orçados';
+            chartType = 'bar';
             break;
-        case 'contagem-servico':
-            labels = ['Serviço'];
-            data = [contagemData.Servico];
-            title = 'Total de Orçamentos de Serviço';
+
+        // No switch case 'valor-total-servicos' do drawIndividualChart:
+// No switch case 'valor-total-servicos' do drawIndividualChart:
+case 'valor-total-servicos':
+    labels = [
+        `Período Atual (${valorTotalServicos.periodoAtual})`,
+        `Período Anterior (${valorTotalServicos.periodoAnterior})`
+    ];
+    data = [valorTotalServicos.valorTotal, valorTotalServicos.valorAnterior];
+    title = `Comparação: Valor Total dos Serviços (Variação: ${valorTotalServicos.variacaoPercentual.toFixed(1)}%)`;
+    chartType = 'bar';
+    
+    // Configuração especial para o tooltip detalhado
+    const tooltipCallbacks = {
+        label: function(context) {
+            const periodo = context.label.includes('Atual') ? 'atual' : 'anterior';
+            const servicos = periodo === 'atual' 
+                ? valorTotalServicos.servicosDetalhadosAtual 
+                : valorTotalServicos.servicosDetalhadosAnterior;
+            
+            let tooltipText = [`Total: R$ ${parseFloat(context.raw).toFixed(2).replace('.', ',')}`];
+            
+            // Adicionar detalhes dos serviços se existirem
+            if (servicos && servicos.length > 0) {
+                tooltipText.push('--- Serviços ---');
+                servicos.forEach(servico => {
+                    tooltipText.push(`${servico.nome}: R$ ${servico.valor.toFixed(2).replace('.', ',')}`);
+                });
+            }
+            
+            return tooltipText;
+        }
+    };
+    break;
+
+        case 'custo-total-acumulado':
+            labels = ['Custo Total'];
+            data = [totaisAcumulados.TotalCusto];
+            title = 'Custo Total Acumulado';
+            chartType = 'bar';
             break;
+
+        case 'lucro-total-acumulado':
+            labels = ['Lucro Total Bruto'];
+            data = [totaisAcumulados.TotalLucro];
+            title = 'Lucro Total Bruto Acumulado';
+            chartType = 'bar';
+            break;
+
         default:
             return;
     }
-    
-    // 2. Atualiza o título
-    document.getElementById('chartTitle').textContent = title;
 
+    document.getElementById('chartTitle').textContent = title;
     const chartElement = document.getElementById('budgetChart');
-    
-    // Destroi a instância anterior do gráfico (se existir)
+
     if (Chart.getChart(chartElement)) {
         Chart.getChart(chartElement).destroy();
     }
 
-    // 3. Desenha o novo gráfico (Exemplo: Tipo Barra ou Donut)
+    // Configurações específicas para gráficos monetários
+    const isMonetaryChart = metricId === 'valor-total-servicos' ||
+        metricId === 'custo-total-acumulado' ||
+        metricId === 'lucro-total-acumulado';
+
     new Chart(chartElement, {
-        type: (metricId === 'total-orcamentos' ? 'doughnut' : 'bar'), // Usa Donut para distribuição, Barra para outros
+        type: chartType,
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Valor',
-                data: data,
-                backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 99, 132, 0.7)', 'rgba(75, 192, 192, 0.7)'],
-                borderWidth: 1
+                label: isMonetaryChart ? 'Valor (R$)' : 'Quantidade',
+                data,
+                backgroundColor: isMonetaryChart
+                    ? (metricId === 'custo-total-acumulado' ? ['#dc3545'] :
+                        metricId === 'lucro-total-acumulado' ? ['#0dcaf0'] :
+                            ['#ffc107'])
+                    : gerarCores(data.length),
+                borderColor: '#ffffff',
+                borderWidth: 2
             }]
         },
         options: {
             responsive: true,
-            // ... (Opções de gráfico aqui)
+            plugins: {
+                legend: {
+                    position: chartType === 'doughnut' ? 'right' : 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            if (isMonetaryChart) {
+                                return `R$ ${parseFloat(context.raw).toFixed(2).replace('.', ',')}`;
+                            }
+                            return `${context.label}: ${context.raw} orçamentos`;
+                        }
+                    }
+                }
+            },
+            scales: chartType === 'bar' ? {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            if (isMonetaryChart) {
+                                return 'R$ ' + value.toFixed(2).replace('.', ',');
+                            }
+                            return value;
+                        }
+                    }
+                }
+            } : undefined
         }
     });
 }
 
-// ARQUIVO: home.js
-
-document.addEventListener('DOMContentLoaded', () => {
-    const toggleBtn = document.getElementById('toggleChartBtn');
-    const dashboardContainer = document.getElementById('dashboardContainer');
-
-    if (toggleBtn && dashboardContainer) {
-        toggleBtn.addEventListener('click', () => {
-            if (dashboardContainer.style.display === 'none') {
-                dashboardContainer.style.display = 'block'; // Mostra o container
-                
-                // *** NOVA CHAMADA: Carrega os cards de métricas ***
-                loadAndDrawMetricsCards();
-                
-                toggleBtn.innerHTML = '<i class="bi bi-bar-chart-fill me-1"></i> Ocultar Gráficos';
-            } else {
-                dashboardContainer.style.display = 'none'; // Esconde o container
-                toggleBtn.innerHTML = '<i class="bi bi-bar-chart-fill me-1"></i> Visualizar Gráficos';
-            }
-        });
-
-        const backBtn = document.getElementById('backToMetricsBtn');
-        backBtn.addEventListener('click', () => {
-            document.getElementById('metricsCardsContainer').style.display = 'flex'; // Mostra os cards
-            document.getElementById('individualChartWrapper').style.display = 'none'; // Esconde o gráfico
-        });
-    }
-});
-
-// =======================================================
-    // NOVO BLOCO (Ou Verificação): Lógica para o botão de VOLTAR
-    // =======================================================
-    const backBtn = document.getElementById('backToMetricsBtn');
-    
-    if (backBtn) {
-        backBtn.addEventListener('click', () => {
-            // 1. Mostra os Cards
-            const cardsContainer = document.getElementById('metricsCardsContainer');
-            if (cardsContainer) {
-                cardsContainer.style.display = 'flex'; // Usamos 'flex' no CSS dos cards
-            }
-            
-            // 2. Esconde o Gráfico
-            const chartWrapper = document.getElementById('individualChartWrapper');
-            if (chartWrapper) {
-                chartWrapper.style.display = 'none';
-            }
-        });
-    }
+// ====================================================================
+// FUNÇÃO AUXILIAR: Gerar Cores
+// ====================================================================
+function gerarCores(numCores) {
+    const cores = [
+        '#228F2F',  // Verde principal
+        '#0a210c',  // Verde muito escuro  
+        '#113815',  // Verde escuro
+        '#bcdbbc'   // Verde claro
+    ];
+    return cores.slice(0, numCores);
+}

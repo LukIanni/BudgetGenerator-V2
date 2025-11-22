@@ -57,7 +57,7 @@ router.post('/', protect, async (req, res) => {
         });
 
     } catch (error) {
-        console.error('ERRO FATAL NA ROTA /api/orcamento:', error.message || error); 
+        console.error('ERRO FATAL NA ROTA /api/orcamento:', error.message || error);
         console.error('Stack Trace:', error.stack);
         res.status(500).json({ erro: 'Erro ao gerar orçamento' });
     }
@@ -138,55 +138,148 @@ router.get('/resumo-contagem', protect, async (req, res) => {
 
 // ARQUIVO: apiOrcamento.js (Inserir este bloco)
 
-// Rota para obter o Custo Médio de Produtos e Serviços
-router.get('/custo-medio', protect, async (req, res) => {
+/// Rota para obter os produtos mais orçados (baseado na repetição da descrição)
+router.get('/produtos-mais-orcados', protect, async (req, res) => {
     try {
         const id_usuario = req.userId;
 
-        // --- CÁLCULO DO PRODUTO ---
-        const totalProdutos = await Produto.count({ where: { id_usuario } });
-        
-        // Sumariza as horas, valor_hora e custo_extra (Sequelize não permite SUM de expressão direta)
-        // Buscamos todos os produtos para calcular o custo total individualmente no loop
         const produtos = await Produto.findAll({
             where: { id_usuario },
-            attributes: ['horas', 'valor_hora', 'custo_extra']
+            attributes: ['descricao'],
+            raw: true
         });
 
-        let custoTotalProdutos = 0;
+        // Contar frequência de cada descrição
+        const contagem = {};
         produtos.forEach(p => {
-            // Lógica: (horas * valor_hora) + custo_extra
-            const horas = parseFloat(p.horas) || 0;
-            const valor_hora = parseFloat(p.valor_hora) || 0;
-            const custo_extra = parseFloat(p.custo_extra) || 0;
-            custoTotalProdutos += (horas * valor_hora) + custo_extra;
+            const nome = p.descricao?.trim() || 'Sem nome';
+            contagem[nome] = (contagem[nome] || 0) + 1;
         });
 
-        const custoMedioProduto = totalProdutos > 0 ? custoTotalProdutos / totalProdutos : 0;
+        // Converter para array e ordenar
+        const resultado = Object.entries(contagem)
+            .map(([produto, contagem]) => ({ produto, contagem }))
+            .sort((a, b) => b.contagem - a.contagem)
+            .slice(0, 20); // top 20
 
-
-        // --- CÁLCULO DO SERVIÇO ---
-        const totalServicos = await Servico.count({ where: { id_usuario } });
-        // Sumariza o campo 'custo' (assumindo que 'custo' representa o custo base do serviço)
-        const custoTotalServicos = await Servico.sum('custo', { 
-            where: { id_usuario }
-        });
-
-        const custoMedioServico = totalServicos > 0 ? (custoTotalServicos / totalServicos) : 0;
-
-        // Enviar a resposta
-        res.status(200).json({
-            Produto: custoMedioProduto,
-            Servico: custoMedioServico,
-            unidade: 'R$' // Adiciona a unidade
-        });
+        res.json(resultado);
 
     } catch (error) {
-        console.error('Erro ao buscar custo médio:', error);
-        res.status(500).json({ erro: 'Erro ao buscar dados de custo médio' });
+        console.error('Erro ao buscar produtos mais orçados:', error);
+        res.status(500).json({ error: 'Erro interno ao buscar produtos mais orçados' });
     }
 });
+// ARQUIVO: apiOrcamento.js (Adicionar esta rota)
 
+// Rota para obter o valor total dos serviços
+// Rota para obter o valor total dos serviços com comparação temporal
+// Rota para obter o valor total dos serviços
+router.get('/valor-total-servicos', protect, async (req, res) => {
+    try {
+        console.log('=== INICIANDO /valor-total-servicos ===');
+        const id_usuario = req.userId;
+        console.log('ID usuário:', id_usuario);
+
+        // Buscar todos os serviços do usuário com nome
+        const servicos = await Servico.findAll({
+            where: { id_usuario },
+            attributes: ['nome_servico', 'custo', 'lucro', 'data_criacao']
+        });
+
+        console.log('Servicos encontrados:', servicos.length);
+
+        // Períodos para comparação (mês atual vs mês anterior)
+        const agora = new Date();
+        const mesAtual = agora.getMonth();
+        const anoAtual = agora.getFullYear();
+
+        const mesAnterior = mesAtual === 0 ? 11 : mesAtual - 1;
+        const anoAnterior = mesAtual === 0 ? anoAtual - 1 : anoAtual;
+
+        console.log('Período atual:', mesAtual + 1, '/', anoAtual);
+        console.log('Período anterior:', mesAnterior + 1, '/', anoAnterior);
+
+        let valorTotalAtual = 0;
+        let valorTotalAnterior = 0;
+        let quantidadeAtual = 0;
+        let quantidadeAnterior = 0;
+        
+        // Arrays para armazenar os serviços de cada período
+        const servicosAtual = [];
+        const servicosAnterior = [];
+
+        servicos.forEach(servico => {
+            const dataCriacao = new Date(servico.data_criacao);
+            const custo = parseFloat(servico.custo) || 0;
+            const lucro = parseFloat(servico.lucro) || 0;
+            const valorTotal = custo + lucro;
+            const nomeServico = servico.nome_servico || 'Serviço sem nome';
+
+            // Verificar se é do mês atual
+            if (dataCriacao.getMonth() === mesAtual && dataCriacao.getFullYear() === anoAtual) {
+                valorTotalAtual += valorTotal;
+                quantidadeAtual++;
+                servicosAtual.push({
+                    nome: nomeServico,
+                    valor: valorTotal,
+                    custo: custo,
+                    lucro: lucro
+                });
+            }
+            // Verificar se é do mês anterior
+            else if (dataCriacao.getMonth() === mesAnterior && dataCriacao.getFullYear() === anoAnterior) {
+                valorTotalAnterior += valorTotal;
+                quantidadeAnterior++;
+                servicosAnterior.push({
+                    nome: nomeServico,
+                    valor: valorTotal,
+                    custo: custo,
+                    lucro: lucro
+                });
+            }
+        });
+
+        console.log('Valor total atual:', valorTotalAtual);
+        console.log('Valor total anterior:', valorTotalAnterior);
+
+        // Calcular variação percentual
+        let variacaoPercentual = 0;
+        if (valorTotalAnterior > 0) {
+            variacaoPercentual = ((valorTotalAtual - valorTotalAnterior) / valorTotalAnterior) * 100;
+        } else if (valorTotalAtual > 0) {
+            variacaoPercentual = 100;
+        }
+
+        console.log('Variação percentual:', variacaoPercentual);
+
+        const response = {
+            valorTotal: valorTotalAtual,
+            valorAnterior: valorTotalAnterior,
+            variacaoPercentual: variacaoPercentual,
+            quantidadeServicos: quantidadeAtual,
+            quantidadeServicosAnterior: quantidadeAnterior,
+            periodoAtual: `${mesAtual + 1}/${anoAtual}`,
+            periodoAnterior: `${mesAnterior + 1}/${anoAnterior}`,
+            // NOVO: Lista detalhada de serviços
+            servicosDetalhadosAtual: servicosAtual,
+            servicosDetalhadosAnterior: servicosAnterior
+        };
+
+        console.log('Response:', response);
+        console.log('=== FINALIZANDO /valor-total-servicos ===');
+
+        res.status(200).json(response);
+
+    } catch (error) {
+        console.error('ERRO DETALHADO em /valor-total-servicos:');
+        console.error('Mensagem:', error.message);
+        console.error('Stack:', error.stack);
+        res.status(500).json({
+            error: 'Erro interno ao buscar valor total dos serviços',
+            detalhes: error.message
+        });
+    }
+});
 router.get('/totais-acumulados', protect, async (req, res) => {
     try {
         const id_usuario = req.userId;
@@ -200,20 +293,20 @@ router.get('/totais-acumulados', protect, async (req, res) => {
 
         let totalCustoProduto = 0; // Materiais + Mão de Obra
         let totalLucroProduto = 0;
-        
+
         produtos.forEach(p => {
             const horas = parseFloat(p.horas) || 0;
             const valorHora = parseFloat(p.valor_hora) || 0;
             const custoExtra = parseFloat(p.custo_extra) || 0;
-            
+
             const custoMaoDeObra = horas * valorHora;
             const custoMateriais = custoExtra;
             const custoTotalItem = custoMateriais + custoMaoDeObra;
 
             // Assumindo Margem de Lucro FIXA de 35% para produtos (baseado no seu exemplo)
-            const margemLucroPercentual = 0.35; 
+            const margemLucroPercentual = 0.35;
             const valorLucroItem = custoTotalItem * margemLucroPercentual;
-            
+
             totalCustoProduto += custoTotalItem;
             totalLucroProduto += valorLucroItem;
         });
@@ -223,8 +316,8 @@ router.get('/totais-acumulados', protect, async (req, res) => {
         // --- CÁLCULOS TOTAIS SERVIÇO ---
         // O Serviço tem campos mais claros: custo e lucro
         const totalCustoServico = await Servico.sum('custo', { where: { id_usuario } });
-        const totalLucroServico = await Servico.sum('lucro', { where: { id_usuario } }); 
-        
+        const totalLucroServico = await Servico.sum('lucro', { where: { id_usuario } });
+
         const totalCustoServicoNum = parseFloat(totalCustoServico) || 0;
         const totalLucroServicoNum = parseFloat(totalLucroServico) || 0;
 
@@ -251,11 +344,11 @@ router.get('/totais-acumulados', protect, async (req, res) => {
 router.get('/composicao-custo/:id', protect, async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         // Busca o produto pelo ID e verifica o usuário
         const produto = await Produto.findOne({
             where: { id_produto: id, id_usuario: req.userId },
-            attributes: ['horas', 'valor_hora', 'custo_extra'] 
+            attributes: ['horas', 'valor_hora', 'custo_extra']
         });
 
         if (!produto) {
@@ -266,23 +359,23 @@ router.get('/composicao-custo/:id', protect, async (req, res) => {
         const horas = parseFloat(produto.horas) || 0;
         const valorHora = parseFloat(produto.valor_hora) || 0;
         const custoExtra = parseFloat(produto.custo_extra) || 0;
-        
+
         const custoMaoDeObra = horas * valorHora;
         const custoMateriais = custoExtra; // Usando custo_extra como proxy para custo de materiais
-        
+
         // Nota: Você pode precisar ajustar esta lógica se o seu modelo Produto tiver um campo 'custo_materiais'
         const custoTotal = custoMateriais + custoMaoDeObra;
 
         // Assumindo Margem de Lucro de 35% como no seu exemplo (você pode buscar isso do BD se tiver o campo)
-        const margemLucroPercentual = 0.35; 
+        const margemLucroPercentual = 0.35;
         const valorLucro = custoTotal * margemLucroPercentual;
-        
+
         const valorFinal = custoTotal + valorLucro;
-        
+
         // 3. Enviar a resposta formatada para o gráfico
         res.status(200).json({
             valor_final: valorFinal,
-            CustoBase: custoMateriais, 
+            CustoBase: custoMateriais,
             MaoDeObra: custoMaoDeObra,
             Lucro: valorLucro
         });
@@ -305,16 +398,16 @@ router.get('/resposta/:id', protect, async (req, res) => {
     try {
         if (tipo === 'produto') {
             registro = await Produto.findOne({
-                where: { 
+                where: {
                     id_produto: id,
-                    id_usuario: req.userId 
+                    id_usuario: req.userId
                 }
             });
         } else if (tipo === 'servico') {
             registro = await Servico.findOne({
-                where: { 
+                where: {
                     id_servico: id,
-                    id_usuario: req.userId 
+                    id_usuario: req.userId
                 }
             });
         } else {
@@ -349,20 +442,20 @@ router.put('/atualizar-resposta/:id', protect, async (req, res) => {
         if (tipo === 'produto') {
             atualizado = await Produto.update(
                 { resposta },
-                { 
-                    where: { 
+                {
+                    where: {
                         id_produto: id,
-                        id_usuario: req.userId 
+                        id_usuario: req.userId
                     }
                 }
             );
         } else if (tipo === 'servico') {
             atualizado = await Servico.update(
                 { resposta },
-                { 
-                    where: { 
+                {
+                    where: {
                         id_servico: id,
-                        id_usuario: req.userId 
+                        id_usuario: req.userId
                     }
                 }
             );
@@ -371,12 +464,12 @@ router.put('/atualizar-resposta/:id', protect, async (req, res) => {
         }
 
         if (atualizado[0] === 0) {
-            return res.status(404).json({ 
-                erro: 'Orçamento não encontrado ou você não tem permissão para editá-lo' 
+            return res.status(404).json({
+                erro: 'Orçamento não encontrado ou você não tem permissão para editá-lo'
             });
         }
 
-        res.json({ 
+        res.json({
             mensagem: 'Resposta atualizada com sucesso',
             resposta: resposta
         });
@@ -396,16 +489,16 @@ router.delete('/:id', protect, async (req, res) => {
 
         if (tipo === 'produto') {
             deletado = await Produto.destroy({
-                where: { 
+                where: {
                     id_produto: id,
-                    id_usuario: req.userId 
+                    id_usuario: req.userId
                 }
             });
         } else if (tipo === 'servico') {
             deletado = await Servico.destroy({
-                where: { 
+                where: {
                     id_servico: id,
-                    id_usuario: req.userId 
+                    id_usuario: req.userId
                 }
             });
         } else {

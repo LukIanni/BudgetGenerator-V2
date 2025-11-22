@@ -74,16 +74,22 @@
                         </button>
                     </div>
                     <div id="dashboardContainer" class="p-3" style="display: none;">
-                        <h5 class="text-dark mb-3">Métricas de Orçamento:</h5>
+                        <h5 class="text-dark mb-4">Métricas de Orçamento:</h5>
+
                         <div id="metricsCardsContainer" class="row g-3 mb-4">
+                            <!-- Os cards serão inseridos aqui via JavaScript -->
                         </div>
 
                         <div id="individualChartWrapper" style="display: none;">
                             <hr>
-                            <h5 id="chartTitle" class="text-dark text-center mb-3"></h5>
-                            <canvas id="budgetChart"></canvas>
-                            <div class="d-flex justify-content-center mt-3">
-                                <button id="backToMetricsBtn" class="btn btn-sm btn-outline-light">
+                            <h3 id="chartTitle" class="text-dark text-center mb-4"></h3>
+                            <div class="chart-container" style="max-width: 700px; margin: 0 auto;">
+                                <div class="card shadow-sm p-3">
+                                    <canvas id="budgetChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-center mt-4">
+                                <button id="backToMetricsBtn" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-arrow-left me-1"></i> Voltar para Métricas
                                 </button>
                             </div>

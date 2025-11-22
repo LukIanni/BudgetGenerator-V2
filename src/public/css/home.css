@@ -7,3 +7,70 @@
     border-top: 1px solid #ccc;
     padding-top: 15px;
 }
+/* CSS para o efeito moderno dos Cards */
+.card-metric {
+    /* Mãozinha ao entrar, indicando que é clicável */
+    cursor: pointer;
+    
+    /* Transição suave para o efeito de elevação (0.3 segundos) */
+    transition: all 0.3s ease-in-out;
+    
+    /* Garante que a sombra não seja cortada */
+    overflow: hidden; 
+}
+
+/* Efeito ao passar o mouse: eleva o card e aumenta a sombra */
+.card-metric:hover {
+    /* Usa a sombra maior do Bootstrap para o efeito de elevação */
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important; 
+    
+    /* Pequeno movimento para cima para o efeito de flutuação */
+    transform: translateY(-5px); 
+}
+
+/* Estilos para os cards de métricas */
+.metric-card {
+    min-height: 120px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+.metric-card .card-body {
+    padding: 1.25rem;
+}
+
+.metric-card .card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.metric-card .card-text {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+}
+
+.metric-card small {
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* Garantir que todos os cards tenham a mesma altura */
+.row.g-3 {
+    align-items: stretch;
+}
+
+.col-md-4 {
+    display: flex;
+}
+
+.col-md-4 > .card {
+    flex: 1;
+}
