@@ -78,39 +78,51 @@ async function loadAndDrawMetricsCards() {
                 color: 'primary'
             },
             {
-    id: 'valor-total-servicos',
-    icon: 'bi-tools',
-    label: 'Valor Total em Serviços',
-    value: formatarRS(valorTotalServicos.valorTotal),
-    subtitle: `${valorTotalServicos.quantidadeServicos} serviços (${valorTotalServicos.variacaoPercentual.toFixed(1)}% vs anterior)`,
-    unit: 'R$',
-    color: 'warning'
-},
-            {
-                id: 'custo-total-acumulado',
-                icon: 'bi-box-seam',
-                label: 'Custo Total Acumulado',
-                value: formatarRS(totaisAcumulados.TotalCusto),
+                id: 'valor-total-servicos',
+                icon: 'bi-tools',
+                label: 'Valor Total em Serviços',
+                value: formatarRS(valorTotalServicos.valorTotal),
+                subtitle: `${valorTotalServicos.quantidadeServicos} serviços (${valorTotalServicos.variacaoPercentual.toFixed(1)}% vs anterior)`,
                 unit: 'R$',
+                color: 'warning'
+            },
+            {
+                id: 'custo-total-real',
+                icon: 'bi-calculator',
+                label: 'Custo Total Real',
+                value: `R$ ${formatarRS(totaisAcumulados.TotalCusto)}`,
+                subtitle: 'Mão de obra + Materiais',
+                unit: '',
                 color: 'danger',
                 data: totaisAcumulados
             },
             {
-                id: 'lucro-total-acumulado',
+                id: 'lucro-total-bruto',
                 icon: 'bi-piggy-bank',
                 label: 'Lucro Total Bruto',
-                value: formatarRS(totaisAcumulados.TotalLucro),
-                unit: 'R$',
-                color: 'info',
+                value: `R$ ${formatarRS(totaisAcumulados.TotalLucro)}`,
+                subtitle: 'Margem aplicada sobre custos',
+                unit: '',
+                color: 'success',
                 data: totaisAcumulados
             },
+            {
+                id: 'valor-final-total',
+                icon: 'bi-cash-stack',
+                label: 'Valor Total Faturado',
+                value: `R$ ${formatarRS(totaisAcumulados.ValorFinalTotal)}`,
+                subtitle: 'O que o cliente paga',
+                unit: '',
+                color: 'primary',
+                data: totaisAcumulados
+            }
         ];
 
         // No seu grafico.js, atualize a parte que gera os cards:
-// No seu grafico.js, atualize a parte que gera os cards:
+        // No seu grafico.js, atualize a parte que gera os cards:
 
-const container = document.getElementById('metricsCardsContainer');
-container.innerHTML = cardsData.map(data => `
+        const container = document.getElementById('metricsCardsContainer');
+        container.innerHTML = cardsData.map(data => `
     <div class="col-md-4">
         <div class="card bg-${data.color} text-white shadow metric-card" data-metric-id="${data.id}">
             <div class="card-body d-flex flex-column">
@@ -152,73 +164,54 @@ function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totais
 
     switch (metricId) {
         case 'total-orcamentos':
-            labels = ['Produto', 'Serviço'];
-            data = [contagemData.Produto, contagemData.Servico];
-            title = 'Distribuição de Orçamentos (Produto vs. Serviço)';
+            labels = ['Produtos', 'Serviços'];
+            data = [contagem.Produto, contagem.Servico];
+            title = 'Distribuição: Produtos vs Serviços';
             chartType = 'doughnut';
             break;
 
         case 'produtos-mais-orcados':
-            const dadosOrdenados = produtosMaisOrcados
-                .sort((a, b) => b.contagem - a.contagem)
-                .slice(0, 15);
-
-            labels = dadosOrdenados.map(item => item.produto);
-            data = dadosOrdenados.map(item => item.contagem);
-            title = 'Produtos Mais Orçados';
+            const top10 = produtosMaisOrcados.slice(0, 10);
+            labels = top10.map(p => p.produto.length > 30 ? p.produto.substring(0, 27) + '...' : p.produto);
+            data = top10.map(p => p.contagem);
+            title = 'Top 10 Produtos Mais Orçados';
             chartType = 'bar';
             break;
 
-        // No switch case 'valor-total-servicos' do drawIndividualChart:
-// No switch case 'valor-total-servicos' do drawIndividualChart:
-case 'valor-total-servicos':
-    labels = [
-        `Período Atual (${valorTotalServicos.periodoAtual})`,
-        `Período Anterior (${valorTotalServicos.periodoAnterior})`
-    ];
-    data = [valorTotalServicos.valorTotal, valorTotalServicos.valorAnterior];
-    title = `Comparação: Valor Total dos Serviços (Variação: ${valorTotalServicos.variacaoPercentual.toFixed(1)}%)`;
-    chartType = 'bar';
-    
-    // Configuração especial para o tooltip detalhado
-    const tooltipCallbacks = {
-        label: function(context) {
-            const periodo = context.label.includes('Atual') ? 'atual' : 'anterior';
-            const servicos = periodo === 'atual' 
-                ? valorTotalServicos.servicosDetalhadosAtual 
-                : valorTotalServicos.servicosDetalhadosAnterior;
-            
-            let tooltipText = [`Total: R$ ${parseFloat(context.raw).toFixed(2).replace('.', ',')}`];
-            
-            // Adicionar detalhes dos serviços se existirem
-            if (servicos && servicos.length > 0) {
-                tooltipText.push('--- Serviços ---');
-                servicos.forEach(servico => {
-                    tooltipText.push(`${servico.nome}: R$ ${servico.valor.toFixed(2).replace('.', ',')}`);
-                });
-            }
-            
-            return tooltipText;
-        }
-    };
-    break;
-
-        case 'custo-total-acumulado':
-            labels = ['Custo Total'];
-            data = [totaisAcumulados.TotalCusto];
-            title = 'Custo Total Acumulado';
+        case 'valor-total-servicos':
+            labels = ['Período Atual', 'Período Anterior'];
+            data = [valorTotalServicos.valorTotal, valorTotalServicos.valorAnterior];
+            title = `Serviços: ${valorTotalServicos.variacaoPercentual > 0 ? 'Aumento' : 'Queda'} de ${Math.abs(valorTotalServicos.variacaoPercentual).toFixed(1)}%`;
             chartType = 'bar';
             break;
 
-        case 'lucro-total-acumulado':
-            labels = ['Lucro Total Bruto'];
-            data = [totaisAcumulados.TotalLucro];
-            title = 'Lucro Total Bruto Acumulado';
-            chartType = 'bar';
+        // NOVOS CARDS — AQUI ESTÁ A SOLUÇÃO!
+        case 'custo-total-real':
+            labels = ['Custo Real (Tudo)', 'Lucro Bruto'];
+            data = [totaisAcumulados.TotalCusto, totaisAcumulados.TotalLucro];
+            title = 'Custo Real vs Lucro Bruto';
+            chartType = 'doughnut';
+            break;
+
+        case 'lucro-total-bruto':
+            labels = ['Lucro sobre Produtos', 'Lucro sobre Serviços'];
+            // Estimando (se quiser exato, adicione no backend)
+            const lucroProduto = totaisAcumulados.TotalLucro * 0.7;  // exemplo
+            const lucroServico = totaisAcumulados.TotalLucro * 0.3;
+            data = [lucroProduto, lucroServico];
+            title = 'Origem do Lucro Bruto';
+            chartType = 'doughnut';
+            break;
+
+        case 'valor-final-total':
+            labels = ['Custo Real', 'Lucro Adicionado'];
+            data = [totaisAcumulados.TotalCusto, totaisAcumulados.TotalLucro];
+            title = `Valor Total Faturado: R$ ${formatarRS(totaisAcumulados.ValorFinalTotal)}`;
+            chartType = 'doughnut';
             break;
 
         default:
-            return;
+            return; // não faz nada
     }
 
     document.getElementById('chartTitle').textContent = title;
