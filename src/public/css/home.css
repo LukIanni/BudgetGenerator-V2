@@ -52,24 +52,51 @@
 }
 
 /* CSS para o efeito moderno dos Cards */
-.card-metric {
-    /* Mãozinha ao entrar, indicando que é clicável */
+.metric-card {
     cursor: pointer;
-    
-    /* Transição suave para o efeito de elevação (0.3 segundos) */
     transition: all 0.3s ease-in-out;
-    
-    /* Garante que a sombra não seja cortada */
-    overflow: hidden; 
+    overflow: hidden;
+    border: none;
+    position: relative;
+    height: 100%;
 }
 
-/* Efeito ao passar o mouse: eleva o card e aumenta a sombra */
-.card-metric:hover {
-    /* Usa a sombra maior do Bootstrap para o efeito de elevação */
-    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important; 
-    
-    /* Pequeno movimento para cima para o efeito de flutuação */
-    transform: translateY(-5px); 
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: left 0.3s ease;
+}
+
+.metric-card:hover::before {
+    left: 100%;
+}
+
+.metric-card:hover {
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.2) !important;
+    transform: translateY(-5px);
+}
+
+.metric-card .card-body {
+    padding: 1.5rem;
+}
+
+.metric-card .card-subtitle {
+    font-weight: 500;
+    opacity: 0.95;
+}
+
+.metric-card .card-title {
+    font-weight: 700;
+}
+
+.metric-card .card-text {
+    font-weight: 500;
+    opacity: 0.9;
 }
 
 /* Estilos para os cards de métricas */
