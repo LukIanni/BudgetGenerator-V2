@@ -7,15 +7,27 @@ const Servico = require('../models/servico');
 
 // Middleware para proteger rotas
 function protect(req, res, next) {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+    console.log('🔐 [PROTECT] Headers recebidos:', req.headers);
+    const authHeader = req.headers.authorization;
+    console.log('🔐 [PROTECT] Authorization header:', authHeader);
+    
+    const token = authHeader?.split(' ')[1];
+    console.log('🔐 [PROTECT] Token extraído:', token);
+    
+    if (!token) {
+        console.error('❌ [PROTECT] Nenhum token fornecido');
+        return res.status(401).json({ error: 'Token não fornecido' });
+    }
 
     try {
+        console.log('🔐 [PROTECT] Verificando token com SECRET:', process.env.JWT_SECRET?.substring(0, 10) + '...');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log('✅ [PROTECT] Token verificado com sucesso. User ID:', decoded.id);
         req.userId = decoded.id;
         next();
     } catch (err) {
-        return res.status(401).json({ error: 'Token inválido' });
+        console.error('❌ [PROTECT] Erro ao verificar token:', err.message);
+        return res.status(401).json({ error: 'Token inválido', details: err.message });
     }
 }
 

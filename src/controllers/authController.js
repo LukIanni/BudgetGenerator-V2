@@ -46,7 +46,13 @@ const register = async (req, res) => {
 
         return res.status(201).json({ 
             message: 'Usuário criado com sucesso!', 
-            token: token 
+            token: token,
+            user: {
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                photo: newUser.photo
+            }
         });
 
     } catch (error) {
@@ -79,7 +85,20 @@ const login = async (req, res) => {
             expiresIn: '1h',
         });
 
-        res.json({ message: 'Login bem-sucedido!', token });
+        console.log('✅ [LOGIN] Token gerado com sucesso');
+        console.log('✅ [LOGIN] User ID:', user.id);
+        console.log('✅ [LOGIN] JWT_SECRET (primeiros 10 chars):', process.env.JWT_SECRET?.substring(0, 10) + '...');
+
+        res.json({ 
+            message: 'Login bem-sucedido!', 
+            token: token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                photo: user.photo
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: 'Erro no servidor.', error: error.message });
     }
