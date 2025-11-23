@@ -67,11 +67,15 @@
 
             <div class="col-md-7 corFrame p-3 rounded">
                 <div class="card">
-                    <div class="card-header corTextos card-header-destaque">
-                        Orçamentos Gerados
-                        <button id="toggleChartBtn" class="btn btn-sm text-light corBotoes">
-                            <i class="bi bi-bar-chart-fill me-1"></i> Visualizar Gráficos
-                        </button>
+                    <div class="card-header corTextos card-header-destaque d-flex align-items-center">
+                        <div class="tabs-container">
+                            <button id="tabOrcamentosBtn" class="tab-btn tab-active" data-tab="orcamentos">
+                                <i class="bi bi-file-text me-2"></i>Orçamentos Gerados
+                            </button>
+                            <button id="tabEstatisticasBtn" class="tab-btn" data-tab="estatisticas">
+                                <i class="bi bi-bar-chart-fill me-2"></i>Estatísticas
+                            </button>
+                        </div>
                     </div>
                     <div id="dashboardContainer" class="p-3" style="display: none;">
                         <h5 class="text-dark mb-4">Métricas de Orçamento:</h5>

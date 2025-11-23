@@ -382,36 +382,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 // ARQUIVO: home.js
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Carregado - Iniciando configuração dos gráficos');
+    console.log('DOM Carregado - Iniciando configuração das abas');
 
-    const toggleBtn = document.getElementById('toggleChartBtn');
+    const tabOrcamentosBtn = document.getElementById('tabOrcamentosBtn');
+    const tabEstatisticasBtn = document.getElementById('tabEstatisticasBtn');
+    const listContainer = document.getElementById('listContainer');
     const dashboardContainer = document.getElementById('dashboardContainer');
     const backBtn = document.getElementById('backToMetricsBtn');
 
     console.log('Elementos encontrados:', {
-        toggleBtn: !!toggleBtn,
+        tabOrcamentosBtn: !!tabOrcamentosBtn,
+        tabEstatisticasBtn: !!tabEstatisticasBtn,
+        listContainer: !!listContainer,
         dashboardContainer: !!dashboardContainer,
         backBtn: !!backBtn
     });
 
-    if (toggleBtn && dashboardContainer) {
-        toggleBtn.addEventListener('click', () => {
-            console.log('Botão clicado - Estado atual:', dashboardContainer.style.display);
+    if (tabOrcamentosBtn && tabEstatisticasBtn && listContainer && dashboardContainer) {
+        // Evento para aba "Orçamentos Gerados"
+        tabOrcamentosBtn.addEventListener('click', () => {
+            console.log('Aba Orçamentos Gerados clicada');
             
-            if (dashboardContainer.style.display === 'none') {
-                dashboardContainer.style.display = 'block';
-                loadAndDrawMetricsCards();
-                toggleBtn.innerHTML = '<i class="bi bi-bar-chart-fill me-1"></i> Ocultar Gráficos';
-                console.log('Gráficos mostrados');
-            } else {
-                dashboardContainer.style.display = 'none';
-                toggleBtn.innerHTML = '<i class="bi bi-bar-chart-fill me-1"></i> Visualizar Gráficos';
-                console.log('Gráficos ocultados');
-            }
+            // Atualizar estado das abas
+            tabOrcamentosBtn.classList.add('tab-active');
+            tabEstatisticasBtn.classList.remove('tab-active');
+            
+            // Mostrar lista e ocultar dashboard
+            listContainer.style.display = 'block';
+            dashboardContainer.style.display = 'none';
+        });
+
+        // Evento para aba "Estatísticas"
+        tabEstatisticasBtn.addEventListener('click', () => {
+            console.log('Aba Estatísticas clicada');
+            
+            // Atualizar estado das abas
+            tabEstatisticasBtn.classList.add('tab-active');
+            tabOrcamentosBtn.classList.remove('tab-active');
+            
+            // Mostrar dashboard e ocultar lista
+            dashboardContainer.style.display = 'block';
+            loadAndDrawMetricsCards();
+            listContainer.style.display = 'none';
         });
     } else {
         console.error('Elementos não encontrados:', {
-            toggleBtn: toggleBtn,
+            tabOrcamentosBtn: tabOrcamentosBtn,
+            tabEstatisticasBtn: tabEstatisticasBtn,
+            listContainer: listContainer,
             dashboardContainer: dashboardContainer
         });
     }
