@@ -15,41 +15,74 @@ function extrairValores(resposta, tipo = 'produto') {
         valor_final: 0
     };
 
+    // Função auxiliar para converter valores monetários brasileiros corretamente
+    const converterValor = (str) => {
+        if (!str) return 0;
+        // Remove espaços
+        str = str.trim();
+        // Se tem ponto e vírgula: último separador é decimal (formato brasileiro: 1.000,50)
+        if (str.includes('.') && str.includes(',')) {
+            const lastComma = str.lastIndexOf(',');
+            const lastDot = str.lastIndexOf('.');
+            if (lastDot > lastComma) {
+                // Formato internacional: 1,000.50
+                return parseFloat(str.replace(/,/g, ''));
+            } else {
+                // Formato brasileiro: 1.000,50
+                return parseFloat(str.replace(/\./g, '').replace(',', '.'));
+            }
+        }
+        // Se tem só vírgula: é decimal (0,50)
+        if (str.includes(',')) {
+            return parseFloat(str.replace(',', '.'));
+        }
+        // Se tem só ponto: pode ser decimal (0.50) ou separador de milhar (1.000)
+        // Se tem mais de 1 ponto, é separador de milhar
+        if ((str.match(/\./g) || []).length > 1) {
+            return parseFloat(str.replace(/\./g, ''));
+        } else if (str.includes('.')) {
+            // Tem só 1 ponto - é decimal
+            return parseFloat(str);
+        }
+        // Sem separadores
+        return parseFloat(str);
+    };
+
     if (tipo === 'produto') {
         // Procura por "CUSTO TOTAL: R$ X.XX"
         const custoMatch = resposta.match(/CUSTO\s+TOTAL:\s*R\$\s*([\d.,]+)/i);
         if (custoMatch) {
-            valores.custo_total = parseFloat(custoMatch[1].replace(/\./g, '').replace(',', '.'));
+            valores.custo_total = converterValor(custoMatch[1]);
         }
 
         // Procura por "LUCRO TOTAL: R$ X.XX"
         const lucroMatch = resposta.match(/LUCRO\s+TOTAL:\s*R\$\s*([\d.,]+)/i);
         if (lucroMatch) {
-            valores.lucro_total = parseFloat(lucroMatch[1].replace(/\./g, '').replace(',', '.'));
+            valores.lucro_total = converterValor(lucroMatch[1]);
         }
 
         // Procura por "VALOR FINAL: R$ X.XX"
         const valorMatch = resposta.match(/VALOR\s+FINAL:\s*R\$\s*([\d.,]+)/i);
         if (valorMatch) {
-            valores.valor_final = parseFloat(valorMatch[1].replace(/\./g, '').replace(',', '.'));
+            valores.valor_final = converterValor(valorMatch[1]);
         }
     } else if (tipo === 'servico') {
         // Procura por "CUSTO DO SERVIÇO: R$ X.XX"
         const custoMatch = resposta.match(/CUSTO\s+DO\s+SERVIÇO:\s*R\$\s*([\d.,]+)/i);
         if (custoMatch) {
-            valores.custo_total = parseFloat(custoMatch[1].replace(/\./g, '').replace(',', '.'));
+            valores.custo_total = converterValor(custoMatch[1]);
         }
 
         // Procura por "LUCRO EM REAIS: R$ X.XX"
         const lucroMatch = resposta.match(/LUCRO\s+EM\s+REAIS:\s*R\$\s*([\d.,]+)/i);
         if (lucroMatch) {
-            valores.lucro_total = parseFloat(lucroMatch[1].replace(/\./g, '').replace(',', '.'));
+            valores.lucro_total = converterValor(lucroMatch[1]);
         }
 
         // Procura por "VALOR TOTAL DO SERVIÇO: R$ X.XX"
         const valorMatch = resposta.match(/VALOR\s+TOTAL\s+DO\s+SERVIÇO:\s*R\$\s*([\d.,]+)/i);
         if (valorMatch) {
-            valores.valor_final = parseFloat(valorMatch[1].replace(/\./g, '').replace(',', '.'));
+            valores.valor_final = converterValor(valorMatch[1]);
         }
     }
 
