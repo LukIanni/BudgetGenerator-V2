@@ -31,6 +31,11 @@ Margem de Lucro: ${data.margemLucro}%
 Horas: ${data.horas}h
 Valor da Hora: R$ ${data.valorHora}
 Custo Extra: R$ ${data.custoExtra || 0}
+
+OBRIGATÓRIO: Ao final do orçamento, inclua EXATAMENTE estas linhas (sem modificações):
+CUSTO TOTAL: R$ [calcule: (horas × valor_hora) + custo_extra]
+LUCRO TOTAL: R$ [calcule: custo_total × (margem_lucro / 100)]
+VALOR FINAL: R$ [calcule: custo_total + lucro_total]
 `;
             } else if (data.nomeServico) {
                 prompt = `Gere uma resposta formal e profissional para um orçamento de serviço.
@@ -46,6 +51,11 @@ Materiais: ${data.materiaisServico}
 Custo do Serviço: R$ ${data.custoServico}
 Margem de Lucro: ${data.lucroServico}%
 Descrição: ${data.descricaoServico || 'Não fornecida'}
+
+OBRIGATÓRIO: Ao final do orçamento, inclua EXATAMENTE estas linhas (sem modificações):
+CUSTO DO SERVIÇO: R$ ${data.custoServico}
+LUCRO EM REAIS: R$ [calcule: ${data.custoServico} × (${data.lucroServico} / 100)]
+VALOR TOTAL DO SERVIÇO: R$ [calcule: custo + lucro]
 `;
             }
 

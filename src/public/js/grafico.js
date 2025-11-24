@@ -1,4 +1,4 @@
-// ARQUIVO: grafico.js
+// ARQUIVO: grafico.js - VERSÃO COMPLETA COM NOVOS GRÁFICOS
 
 const API_BASE = '/api/orcamento';
 
@@ -23,22 +23,22 @@ async function loadAndDrawMetricsCards() {
 
     try {
         const [
-            resumoContagemResponse,
-            produtoResponse,
-            totaisAcumuladosResponse,
-            valorTotalServicosResponse
+            produtosMaisOrcadosV2Response,
+            valorRealServicosResponse,
+            valorRealProdutosResponse,
+            custoTotalRealResponse
         ] = await Promise.all([
-            fetch(`${API_BASE}/resumo-contagem`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/produtos-mais-orcados`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/totais-acumulados`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/valor-total-servicos`, { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(`${API_BASE}/produtos-mais-orcados-v2`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/valor-real-servicos`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/valor-real-produtos`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/custo-total-real`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         if (
-            resumoContagemResponse.status === 401 ||
-            produtoResponse.status === 401 ||
-            totaisAcumuladosResponse.status === 401 ||
-            valorTotalServicosResponse.status === 401
+            produtosMaisOrcadosV2Response.status === 401 ||
+            valorRealServicosResponse.status === 401 ||
+            valorRealProdutosResponse.status === 401 ||
+            custoTotalRealResponse.status === 401
         ) {
             alert('Sua sessão expirou. Faça login novamente.');
             localStorage.removeItem('token');
@@ -47,24 +47,24 @@ async function loadAndDrawMetricsCards() {
         }
 
         if (
-            !resumoContagemResponse.ok ||
-            !produtoResponse.ok ||
-            !totaisAcumuladosResponse.ok ||
-            !valorTotalServicosResponse.ok
+            !produtosMaisOrcadosV2Response.ok ||
+            !valorRealServicosResponse.ok ||
+            !valorRealProdutosResponse.ok ||
+            !custoTotalRealResponse.ok
         ) {
             throw new Error('Erro ao carregar dados');
         }
 
-        const resumoContagem = await resumoContagemResponse.json();
-        const produtosMaisOrcados = await produtoResponse.json();
-        const totaisAcumulados = await totaisAcumuladosResponse.json();
-        const valorTotalServicos = await valorTotalServicosResponse.json();
+        const produtosMaisOrcados = await produtosMaisOrcadosV2Response.json();
+        const valorRealServicos = await valorRealServicosResponse.json();
+        const valorRealProdutos = await valorRealProdutosResponse.json();
+        const custoTotalReal = await custoTotalRealResponse.json();
 
         console.log('Dados carregados:', {
-            resumoContagem,
             produtosMaisOrcados,
-            totaisAcumulados,
-            valorTotalServicos
+            valorRealServicos,
+            valorRealProdutos,
+            custoTotalReal
         });
 
         const cardsData = [
@@ -72,7 +72,7 @@ async function loadAndDrawMetricsCards() {
                 id: 'total-orcamentos',
                 icon: 'bi-list-ul',
                 label: 'Orçamentos Totais',
-                value: resumoContagem.Total || 0,
+                value: (valorRealProdutos.quantidade_produtos || 0) + (valorRealServicos.quantidade_servicos || 0),
                 unit: 'unidades',
                 color: 'primary'
             },
@@ -80,11 +80,9 @@ async function loadAndDrawMetricsCards() {
                 id: 'produtos-mais-orcados',
                 icon: 'bi-cart-check',
                 label: 'Produtos Mais Orçados',
-                value: produtosMaisOrcados.length > 0
-                    ? produtosMaisOrcados[0].contagem
-                    : 0,
+                value: produtosMaisOrcados.length > 0 ? produtosMaisOrcados[0].contagem : 0,
                 subtitle: produtosMaisOrcados.length > 0
-                    ? produtosMaisOrcados[0].produto
+                    ? `${produtosMaisOrcados[0].produto} - R$ ${formatarRS(produtosMaisOrcados[0].valor_total_acumulado)}`
                     : 'Nenhum produto',
                 unit: 'orçamentos',
                 color: 'info'
@@ -93,8 +91,8 @@ async function loadAndDrawMetricsCards() {
                 id: 'valor-total-servicos',
                 icon: 'bi-tools',
                 label: 'Valor em Serviços',
-                value: formatarRS(valorTotalServicos.valorTotal || 0),
-                subtitle: `${valorTotalServicos.quantidadeServicos || 0} serviços (${(valorTotalServicos.variacaoPercentual || 0).toFixed(1)}%)`,
+                value: formatarRS(valorRealServicos.valor_total_servicos || 0),
+                subtitle: `${valorRealServicos.quantidade_servicos || 0} serviços | Custo: R$ ${formatarRS(valorRealServicos.custo_servicos || 0)}`,
                 unit: 'R$',
                 color: 'warning'
             },
@@ -102,17 +100,17 @@ async function loadAndDrawMetricsCards() {
                 id: 'custo-total-real',
                 icon: 'bi-calculator',
                 label: 'Custo Total',
-                value: formatarRS(totaisAcumulados.TotalCusto || 0),
-                subtitle: 'Mão de obra + Materiais',
+                value: formatarRS(custoTotalReal.total_custo || 0),
+                subtitle: `Produtos: R$ ${formatarRS(custoTotalReal.custo_produtos)} | Serviços: R$ ${formatarRS(custoTotalReal.custo_servicos)}`,
                 unit: 'R$',
                 color: 'danger'
             },
             {
                 id: 'lucro-total-bruto',
                 icon: 'bi-piggy-bank',
-                label: 'Lucro Bruto',
-                value: formatarRS(totaisAcumulados.TotalLucro || 0),
-                subtitle: 'Margem de ganho',
+                label: 'Lucro Bruto Total',
+                value: formatarRS(custoTotalReal.total_lucro || 0),
+                subtitle: `Produtos: R$ ${formatarRS(custoTotalReal.lucro_produtos)} | Serviços: R$ ${formatarRS(custoTotalReal.lucro_servicos)}`,
                 unit: 'R$',
                 color: 'success'
             },
@@ -120,8 +118,8 @@ async function loadAndDrawMetricsCards() {
                 id: 'valor-final-total',
                 icon: 'bi-cash-stack',
                 label: 'Total Faturado',
-                value: formatarRS(totaisAcumulados.ValorFinalTotal || 0),
-                subtitle: 'Custo + Lucro',
+                value: formatarRS(custoTotalReal.valor_final_total || 0),
+                subtitle: `Produtos: R$ ${formatarRS(custoTotalReal.breakdown.produtos.valor_final)} | Serviços: R$ ${formatarRS(custoTotalReal.breakdown.servicos.valor_final)}`,
                 unit: 'R$',
                 color: 'secondary'
             }
@@ -155,16 +153,16 @@ async function loadAndDrawMetricsCards() {
         document.querySelectorAll('.metric-card').forEach(card => {
             card.addEventListener('click', function () {
                 const metricId = this.getAttribute('data-metric-id');
-                drawIndividualChart(metricId, resumoContagem, produtosMaisOrcados, totaisAcumulados, valorTotalServicos);
+                drawIndividualChart(metricId, produtosMaisOrcados, valorRealServicos, valorRealProdutos, custoTotalReal);
             });
-            
+
             // Efeito hover
-            card.addEventListener('mouseenter', function() {
+            card.addEventListener('mouseenter', function () {
                 this.style.transform = 'translateY(-5px)';
                 this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
             });
-            
-            card.addEventListener('mouseleave', function() {
+
+            card.addEventListener('mouseleave', function () {
                 this.style.transform = 'translateY(0)';
                 this.style.boxShadow = '';
             });
@@ -180,10 +178,10 @@ async function loadAndDrawMetricsCards() {
 // ====================================================================
 // FUNÇÃO DE DETALHE: Desenha o Gráfico Individual
 // ====================================================================
-function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totaisAcumulados, valorTotalServicos) {
+async function drawIndividualChart(metricId, produtosMaisOrcados, valorRealServicos, valorRealProdutos, custoTotalReal) {
     const metricsContainer = document.getElementById('metricsCardsContainer');
     const chartWrapper = document.getElementById('individualChartWrapper');
-    
+
     if (metricsContainer) metricsContainer.style.display = 'none';
     if (chartWrapper) chartWrapper.style.display = 'block';
 
@@ -192,11 +190,12 @@ function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totais
     let title = '';
     let chartType = 'bar';
     let backgroundColor = [];
+    let needsToggle = false;
 
     switch (metricId) {
         case 'total-orcamentos':
             labels = ['Produtos', 'Serviços'];
-            data = [contagemData.Produto || 0, contagemData.Servico || 0];
+            data = [valorRealProdutos.quantidade_produtos || 0, valorRealServicos.quantidade_servicos || 0];
             title = 'Distribuição: Produtos vs Serviços';
             chartType = 'doughnut';
             backgroundColor = ['#0d6efd', '#198754'];
@@ -204,57 +203,77 @@ function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totais
 
         case 'produtos-mais-orcados':
             const top10 = (produtosMaisOrcados || []).slice(0, 10);
-            labels = top10.map(p => 
-                (p.produto || 'Sem nome').length > 25 
-                    ? (p.produto || 'Sem nome').substring(0, 22) + '...' 
+            labels = top10.map(p =>
+                (p.produto || 'Sem nome').length > 25
+                    ? (p.produto || 'Sem nome').substring(0, 22) + '...'
                     : (p.produto || 'Sem nome')
             );
-            data = top10.map(p => p.contagem || 0);
-            title = 'Top 10 Produtos Mais Orçados';
+            data = top10.map(p => p.valor_total_acumulado || 0);
+            title = 'Top 10 Produtos Mais Orçados (por Valor Total)';
             chartType = 'bar';
             backgroundColor = gerarCores(data.length);
             break;
 
         case 'valor-total-servicos':
-            labels = ['Período Atual', 'Período Anterior'];
-            data = [
-                parseFloat(valorTotalServicos.valorTotal) || 0,
-                parseFloat(valorTotalServicos.valorAnterior) || 0
-            ];
-            title = `Serviços: ${valorTotalServicos.variacaoPercentual > 0 ? '📈 Aumento' : '📉 Queda'} de ${Math.abs(valorTotalServicos.variacaoPercentual || 0).toFixed(1)}%`;
-            chartType = 'bar';
-            backgroundColor = ['#ffc107', '#6c757d'];
+            // Pegar dados de evolução temporal
+            const token = localStorage.getItem('token');
+            try {
+                const evolucaoResponse = await fetch(`${API_BASE}/evolucao-temporal?tipo=mes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const evolucao = await evolucaoResponse.json();
+
+                labels = evolucao.map(e => e.periodo);
+                data = evolucao.map(e => e.valor_total);
+                title = `Evolução de Serviços por Mês | Total: R$ ${formatarRS(valorRealServicos.valor_total_servicos)}`;
+                chartType = 'line';
+                backgroundColor = 'rgba(255, 193, 7, 0.2)';
+                needsToggle = true;
+
+                drawLineChart(labels, data, title, 'Valor Total (R$)');
+                addToggleTemporalButton();
+                return;
+            } catch (error) {
+                console.error('Erro ao carregar evolução:', error);
+                title = 'Valor Total de Serviços';
+                labels = ['Serviços'];
+                data = [valorRealServicos.valor_total_servicos || 0];
+                chartType = 'bar';
+            }
             break;
 
         case 'custo-total-real':
-            labels = ['Custo Total', 'Lucro Bruto'];
+            labels = ['Custo Real', 'Lucro Bruto'];
             data = [
-                parseFloat(totaisAcumulados.TotalCusto) || 0,
-                parseFloat(totaisAcumulados.TotalLucro) || 0
+                custoTotalReal.total_custo || 0,
+                custoTotalReal.total_lucro || 0
             ];
-            title = `Custo vs Lucro | Total: R$ ${formatarRS(totaisAcumulados.ValorFinalTotal || 0)}`;
+            title = `Custo vs Lucro | Total: R$ ${formatarRS(custoTotalReal.valor_final_total || 0)}`;
             chartType = 'doughnut';
             backgroundColor = ['#dc3545', '#0dcaf0'];
             break;
 
         case 'lucro-total-bruto':
-            labels = ['Custo Real', 'Lucro Bruto'];
-            const custoPorcentagem = parseFloat(totaisAcumulados.TotalCusto) || 1;
-            const lucroPorcentagem = parseFloat(totaisAcumulados.TotalLucro) || 0;
-            data = [custoPorcentagem, lucroPorcentagem];
-            const margem = custoPorcentagem > 0 ? ((lucroPorcentagem / custoPorcentagem) * 100).toFixed(1) : 0;
-            title = `Margem de Lucro: ${margem}% | Lucro Total: R$ ${formatarRS(lucroPorcentagem)}`;
+            labels = ['Produtos', 'Serviços'];
+            data = [
+                custoTotalReal.lucro_produtos || 0,
+                custoTotalReal.lucro_servicos || 0
+            ];
+            const margem = custoTotalReal.total_custo > 0
+                ? ((custoTotalReal.total_lucro / custoTotalReal.total_custo) * 100).toFixed(1)
+                : 0;
+            title = `Margem de Lucro: ${margem}% | Total: R$ ${formatarRS(custoTotalReal.total_lucro || 0)}`;
             chartType = 'doughnut';
-            backgroundColor = ['#dc3545', '#198754'];
+            backgroundColor = ['#198754', '#ffc107'];
             break;
 
         case 'valor-final-total':
             labels = ['Custo Real', 'Lucro Adicionado'];
             data = [
-                parseFloat(totaisAcumulados.TotalCusto) || 0,
-                parseFloat(totaisAcumulados.TotalLucro) || 0
+                custoTotalReal.total_custo || 0,
+                custoTotalReal.total_lucro || 0
             ];
-            title = `Valor Total Faturado: R$ ${formatarRS(totaisAcumulados.ValorFinalTotal || 0)}`;
+            title = `Valor Total Faturado: R$ ${formatarRS(custoTotalReal.valor_final_total || 0)}`;
             chartType = 'doughnut';
             backgroundColor = ['#6c757d', '#198754'];
             break;
@@ -295,7 +314,8 @@ function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totais
                 backgroundColor: backgroundColor,
                 borderColor: '#ffffff',
                 borderWidth: 2,
-                borderRadius: 4
+                borderRadius: 4,
+                tension: 0.1 // Para line charts
             }]
         },
         options: {
@@ -317,7 +337,7 @@ function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totais
                                 const valor = parseFloat(context.raw) || 0;
                                 return `R$ ${formatarRS(valor)}`;
                             }
-                            return `${context.label}: ${context.raw} orçamentos`;
+                            return `${context.label}: ${context.raw}`;
                         }
                     },
                     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -326,7 +346,7 @@ function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totais
                     bodyFont: { size: 12 }
                 }
             },
-            scales: chartType === 'bar' ? {
+            scales: chartType === 'bar' || chartType === 'line' ? {
                 y: {
                     beginAtZero: true,
                     grid: { color: 'rgba(0,0,0,0.05)' },
@@ -350,6 +370,106 @@ function drawIndividualChart(metricId, contagemData, produtosMaisOrcados, totais
 }
 
 // ====================================================================
+// FUNÇÃO AUXILIAR: Desenhar Gráfico de Linha
+// ====================================================================
+function drawLineChart(labels, data, title, yAxisLabel) {
+    const chartElement = document.getElementById('budgetChart');
+
+    const existingChart = Chart.getChart(chartElement);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
+    new Chart(chartElement, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: yAxisLabel,
+                data,
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#ffc107',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { font: { size: 12 }, padding: 15 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return `R$ ${formatarRS(context.raw)}`;
+                        }
+                    },
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    padding: 12
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return 'R$ ' + formatarRS(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ====================================================================
+// FUNÇÃO AUXILIAR: Adicionar Toggle para Temporal
+// ====================================================================
+function addToggleTemporalButton() {
+    const buttonsContainer = document.querySelector('.d-flex.justify-content-center');
+    if (buttonsContainer && !document.getElementById('toggleTemporalBtn')) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'toggleTemporalBtn';
+        toggleBtn.className = 'btn btn-sm btn-outline-primary me-2';
+        toggleBtn.innerHTML = '<i class="bi bi-calendar-week me-1"></i> Mudar para Semana';
+
+        toggleBtn.addEventListener('click', async function () {
+            const token = localStorage.getItem('token');
+            const tipo = this.innerHTML.includes('Semana') ? 'semana' : 'mes';
+            const novoTipo = tipo === 'mes' ? 'semana' : 'mes';
+
+            try {
+                const response = await fetch(`${API_BASE}/evolucao-temporal?tipo=${novoTipo}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                const labels = data.map(e => e.periodo);
+                const valores = data.map(e => e.valor_total);
+                const title = `Evolução de Serviços por ${novoTipo === 'mes' ? 'Mês' : 'Semana'}`;
+
+                drawLineChart(labels, valores, title, 'Valor Total (R$)');
+
+                this.innerHTML = `<i class="bi bi-calendar-week me-1"></i> Mudar para ${novoTipo === 'mes' ? 'Semana' : 'Mês'}`;
+            } catch (error) {
+                console.error('Erro ao alternar período:', error);
+            }
+        });
+
+        buttonsContainer.insertBefore(toggleBtn, buttonsContainer.firstChild);
+    }
+}
+
+// ====================================================================
 // FUNÇÃO AUXILIAR: Gerar Cores
 // ====================================================================
 function gerarCores(numCores) {
@@ -357,7 +477,13 @@ function gerarCores(numCores) {
         '#228F2F',  // Verde principal
         '#0a210c',  // Verde muito escuro  
         '#113815',  // Verde escuro
-        '#bcdbbc'   // Verde claro
+        '#bcdbbc',  // Verde claro
+        '#3ea47d',  // Verde médio
+        '#0d6efd',  // Azul
+        '#198754',  // Verde bootstrap
+        '#ffc107',  // Amarelo
+        '#198754',  // Verde
+        '#6f42c1'   // Roxo
     ];
     return cores.slice(0, numCores);
 }

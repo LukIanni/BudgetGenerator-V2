@@ -3,8 +3,8 @@ const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const syncDatabase = require('./syncDatabase');
-const Produto = require('./models/produto'); 
-const Servico = require('./models/servico'); 
+const Produto = require('./models/produto');
+const Servico = require('./models/servico');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const app = express();
 
@@ -48,7 +48,7 @@ app.get('/orcamento.html', (req, res) => {
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-const apiOrcamentoRoutes = require('./routes/apiOrcamento'); 
+const apiOrcamentoRoutes = require('./routes/apiOrcamento');
 
 
 app.use('/api/auth', authRoutes);
@@ -56,7 +56,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/orcamento', apiOrcamentoRoutes);
 
 syncDatabase().then(() => {
-const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
         console.log(`Servidor rodando em http://localhost:${PORT}`);
     });

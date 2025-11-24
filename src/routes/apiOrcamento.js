@@ -5,15 +5,66 @@ const geminiService = require('../services/geminiService');
 const Produto = require('../models/produto');
 const Servico = require('../models/servico');
 
+// ====================================================================
+// FUNÇÃO AUXILIAR: Extrair valores da resposta da IA
+// ====================================================================
+function extrairValores(resposta, tipo = 'produto') {
+    const valores = {
+        custo_total: 0,
+        lucro_total: 0,
+        valor_final: 0
+    };
+
+    if (tipo === 'produto') {
+        // Procura por "CUSTO TOTAL: R$ X.XX"
+        const custoMatch = resposta.match(/CUSTO\s+TOTAL:\s*R\$\s*([\d.,]+)/i);
+        if (custoMatch) {
+            valores.custo_total = parseFloat(custoMatch[1].replace(/\./g, '').replace(',', '.'));
+        }
+
+        // Procura por "LUCRO TOTAL: R$ X.XX"
+        const lucroMatch = resposta.match(/LUCRO\s+TOTAL:\s*R\$\s*([\d.,]+)/i);
+        if (lucroMatch) {
+            valores.lucro_total = parseFloat(lucroMatch[1].replace(/\./g, '').replace(',', '.'));
+        }
+
+        // Procura por "VALOR FINAL: R$ X.XX"
+        const valorMatch = resposta.match(/VALOR\s+FINAL:\s*R\$\s*([\d.,]+)/i);
+        if (valorMatch) {
+            valores.valor_final = parseFloat(valorMatch[1].replace(/\./g, '').replace(',', '.'));
+        }
+    } else if (tipo === 'servico') {
+        // Procura por "CUSTO DO SERVIÇO: R$ X.XX"
+        const custoMatch = resposta.match(/CUSTO\s+DO\s+SERVIÇO:\s*R\$\s*([\d.,]+)/i);
+        if (custoMatch) {
+            valores.custo_total = parseFloat(custoMatch[1].replace(/\./g, '').replace(',', '.'));
+        }
+
+        // Procura por "LUCRO EM REAIS: R$ X.XX"
+        const lucroMatch = resposta.match(/LUCRO\s+EM\s+REAIS:\s*R\$\s*([\d.,]+)/i);
+        if (lucroMatch) {
+            valores.lucro_total = parseFloat(lucroMatch[1].replace(/\./g, '').replace(',', '.'));
+        }
+
+        // Procura por "VALOR TOTAL DO SERVIÇO: R$ X.XX"
+        const valorMatch = resposta.match(/VALOR\s+TOTAL\s+DO\s+SERVIÇO:\s*R\$\s*([\d.,]+)/i);
+        if (valorMatch) {
+            valores.valor_final = parseFloat(valorMatch[1].replace(/\./g, '').replace(',', '.'));
+        }
+    }
+
+    return valores;
+}
+
 // Middleware para proteger rotas
 function protect(req, res, next) {
     console.log('🔐 [PROTECT] Headers recebidos:', req.headers);
     const authHeader = req.headers.authorization;
     console.log('🔐 [PROTECT] Authorization header:', authHeader);
-    
+
     const token = authHeader?.split(' ')[1];
     console.log('🔐 [PROTECT] Token extraído:', token);
-    
+
     if (!token) {
         console.error('❌ [PROTECT] Nenhum token fornecido');
         return res.status(401).json({ error: 'Token não fornecido' });
@@ -39,7 +90,10 @@ router.post('/', protect, async (req, res) => {
         // 1. Gerar resposta com IA
         const respostaIA = await geminiService.generateBudgetResponse(dados);
 
-        // 2. Salvar no banco
+        // 2. Extrair valores da resposta
+        const valoresExtraidos = extrairValores(respostaIA, dados.nomeProduto ? 'produto' : 'servico');
+
+        // 3. Salvar no banco
         let registro;
         if (dados.nomeProduto) {
             registro = await Produto.create({
@@ -47,6 +101,9 @@ router.post('/', protect, async (req, res) => {
                 horas: parseFloat(dados.horas),
                 valor_hora: parseFloat(dados.valorHora),
                 custo_extra: parseFloat(dados.custoExtra || 0),
+                custo_total: valoresExtraidos.custo_total,
+                lucro_total: valoresExtraidos.lucro_total,
+                valor_final: valoresExtraidos.valor_final,
                 resposta: respostaIA,
                 id_usuario: req.userId
             });
@@ -56,6 +113,8 @@ router.post('/', protect, async (req, res) => {
                 materials: dados.materiaisServico,
                 custo: parseFloat(dados.custoServico),
                 lucro: parseFloat(dados.lucroServico),
+                valor_total: valoresExtraidos.valor_final,
+                lucro_em_reais: valoresExtraidos.lucro_total,
                 resposta: respostaIA,
                 id_usuario: req.userId
             });
@@ -65,7 +124,8 @@ router.post('/', protect, async (req, res) => {
             mensagem: 'Orçamento gerado com sucesso!',
             resposta: respostaIA,
             id: dados.nomeProduto ? registro.id_produto : registro.id_servico,
-            tipo: dados.nomeProduto ? 'produto' : 'servico'
+            tipo: dados.nomeProduto ? 'produto' : 'servico',
+            valores_extraidos: valoresExtraidos
         });
 
     } catch (error) {
@@ -215,7 +275,7 @@ router.get('/valor-total-servicos', protect, async (req, res) => {
         let valorTotalAnterior = 0;
         let quantidadeAtual = 0;
         let quantidadeAnterior = 0;
-        
+
         // Arrays para armazenar os serviços de cada período
         const servicosAtual = [];
         const servicosAnterior = [];
@@ -528,6 +588,264 @@ router.delete('/:id', protect, async (req, res) => {
     }
 });
 
+// ====================================================================
+// NOVA ROTA 1: Produtos Mais Orçados com Valor Total Acumulado
+// ====================================================================
+router.get('/produtos-mais-orcados-v2', protect, async (req, res) => {
+    try {
+        const id_usuario = req.userId;
+
+        const produtos = await Produto.findAll({
+            where: { id_usuario },
+            attributes: ['descricao', 'valor_final'],
+            raw: true
+        });
+
+        // Agrupar por descrição e somar valores
+        const agrupado = {};
+        produtos.forEach(p => {
+            const nome = p.descricao?.trim() || 'Sem nome';
+            if (!agrupado[nome]) {
+                agrupado[nome] = { contagem: 0, valor_total_acumulado: 0 };
+            }
+            agrupado[nome].contagem += 1;
+            agrupado[nome].valor_total_acumulado += parseFloat(p.valor_final) || 0;
+        });
+
+        // Converter para array e ordenar por valor descrescente
+        const resultado = Object.entries(agrupado)
+            .map(([produto, dados]) => ({
+                produto,
+                contagem: dados.contagem,
+                valor_total_acumulado: dados.valor_total_acumulado
+            }))
+            .sort((a, b) => b.valor_total_acumulado - a.valor_total_acumulado)
+            .slice(0, 10);
+
+        res.json(resultado);
+    } catch (error) {
+        console.error('Erro ao buscar produtos mais orçados v2:', error);
+        res.status(500).json({ error: 'Erro interno ao buscar produtos' });
+    }
+});
+
+// ====================================================================
+// NOVA ROTA 2: Valor Real de Serviços
+// ====================================================================
+router.get('/valor-real-servicos', protect, async (req, res) => {
+    try {
+        const id_usuario = req.userId;
+
+        const servicos = await Servico.findAll({
+            where: { id_usuario },
+            attributes: ['valor_total', 'custo', 'lucro_em_reais'],
+            raw: true
+        });
+
+        let valor_total_servicos = 0;
+        let custo_servicos = 0;
+        let lucro_servicos = 0;
+
+        servicos.forEach(s => {
+            valor_total_servicos += parseFloat(s.valor_total) || 0;
+            custo_servicos += parseFloat(s.custo) || 0;
+            lucro_servicos += parseFloat(s.lucro_em_reais) || 0;
+        });
+
+        res.json({
+            valor_total_servicos,
+            custo_servicos,
+            lucro_servicos,
+            quantidade_servicos: servicos.length
+        });
+    } catch (error) {
+        console.error('Erro ao buscar valor real de serviços:', error);
+        res.status(500).json({ error: 'Erro ao buscar dados de serviços' });
+    }
+});
+
+// ====================================================================
+// NOVA ROTA 3: Valor Real de Produtos
+// ====================================================================
+router.get('/valor-real-produtos', protect, async (req, res) => {
+    try {
+        const id_usuario = req.userId;
+
+        const produtos = await Produto.findAll({
+            where: { id_usuario },
+            attributes: ['valor_final', 'custo_total', 'lucro_total'],
+            raw: true
+        });
+
+        let valor_total_produtos = 0;
+        let custo_produtos = 0;
+        let lucro_produtos = 0;
+
+        produtos.forEach(p => {
+            valor_total_produtos += parseFloat(p.valor_final) || 0;
+            custo_produtos += parseFloat(p.custo_total) || 0;
+            lucro_produtos += parseFloat(p.lucro_total) || 0;
+        });
+
+        res.json({
+            valor_total_produtos,
+            custo_produtos,
+            lucro_produtos,
+            quantidade_produtos: produtos.length
+        });
+    } catch (error) {
+        console.error('Erro ao buscar valor real de produtos:', error);
+        res.status(500).json({ error: 'Erro ao buscar dados de produtos' });
+    }
+});
+
+// ====================================================================
+// NOVA ROTA 4: Evolução Temporal (Mês ou Semana)
+// ====================================================================
+router.get('/evolucao-temporal', protect, async (req, res) => {
+    try {
+        const id_usuario = req.userId;
+        const tipo = req.query.tipo || 'mes'; // 'mes' ou 'semana'
+
+        // Buscar todos os orçamentos
+        const produtos = await Produto.findAll({
+            where: { id_usuario },
+            attributes: ['valor_final', 'custo_total', 'data_criacao'],
+            raw: true
+        });
+
+        const servicos = await Servico.findAll({
+            where: { id_usuario },
+            attributes: ['valor_total', 'custo', 'data_criacao'],
+            raw: true
+        });
+
+        const dados = [
+            ...produtos.map(p => ({
+                valor: parseFloat(p.valor_final) || 0,
+                custo: parseFloat(p.custo_total) || 0,
+                data: new Date(p.data_criacao)
+            })),
+            ...servicos.map(s => ({
+                valor: parseFloat(s.valor_total) || 0,
+                custo: parseFloat(s.custo) || 0,
+                data: new Date(s.data_criacao)
+            }))
+        ];
+
+        // Agrupar por período
+        const agrupado = {};
+
+        dados.forEach(item => {
+            let chave;
+            if (tipo === 'semana') {
+                const ano = item.data.getFullYear();
+                const semana = Math.ceil((item.data.getDate() + new Date(ano, item.data.getMonth(), 1).getDay()) / 7);
+                chave = `${ano}-W${String(semana).padStart(2, '0')}`;
+            } else {
+                // Mês
+                const ano = item.data.getFullYear();
+                const mes = String(item.data.getMonth() + 1).padStart(2, '0');
+                chave = `${ano}-${mes}`;
+            }
+
+            if (!agrupado[chave]) {
+                agrupado[chave] = { valor_total: 0, custo: 0, lucro: 0, quantidade: 0 };
+            }
+
+            agrupado[chave].valor_total += item.valor;
+            agrupado[chave].custo += item.custo;
+            agrupado[chave].lucro += (item.valor - item.custo);
+            agrupado[chave].quantidade += 1;
+        });
+
+        // Converter para array ordenado
+        const resultado = Object.entries(agrupado)
+            .map(([periodo, dados]) => ({
+                periodo,
+                valor_total: dados.valor_total,
+                custo: dados.custo,
+                lucro: dados.lucro,
+                quantidade: dados.quantidade
+            }))
+            .sort((a, b) => a.periodo.localeCompare(b.periodo));
+
+        res.json(resultado);
+    } catch (error) {
+        console.error('Erro ao buscar evolução temporal:', error);
+        res.status(500).json({ error: 'Erro ao buscar dados temporais' });
+    }
+});
+
+// ====================================================================
+// NOVA ROTA 5: Custo Total Real
+// ====================================================================
+router.get('/custo-total-real', protect, async (req, res) => {
+    try {
+        const id_usuario = req.userId;
+
+        // Buscar dados de produtos
+        const produtos = await Produto.findAll({
+            where: { id_usuario },
+            attributes: ['custo_total', 'lucro_total', 'valor_final'],
+            raw: true
+        });
+
+        // Buscar dados de serviços
+        const servicos = await Servico.findAll({
+            where: { id_usuario },
+            attributes: ['custo', 'lucro_em_reais', 'valor_total'],
+            raw: true
+        });
+
+        let custo_produtos = 0;
+        let lucro_produtos = 0;
+        let valor_final_produtos = 0;
+
+        let custo_servicos = 0;
+        let lucro_servicos = 0;
+        let valor_final_servicos = 0;
+
+        produtos.forEach(p => {
+            custo_produtos += parseFloat(p.custo_total) || 0;
+            lucro_produtos += parseFloat(p.lucro_total) || 0;
+            valor_final_produtos += parseFloat(p.valor_final) || 0;
+        });
+
+        servicos.forEach(s => {
+            custo_servicos += parseFloat(s.custo) || 0;
+            lucro_servicos += parseFloat(s.lucro_em_reais) || 0;
+            valor_final_servicos += parseFloat(s.valor_total) || 0;
+        });
+
+        res.json({
+            custo_produtos,
+            custo_servicos,
+            total_custo: custo_produtos + custo_servicos,
+            lucro_produtos,
+            lucro_servicos,
+            total_lucro: lucro_produtos + lucro_servicos,
+            valor_final_total: valor_final_produtos + valor_final_servicos,
+            breakdown: {
+                produtos: {
+                    custo: custo_produtos,
+                    lucro: lucro_produtos,
+                    valor_final: valor_final_produtos,
+                    quantidade: produtos.length
+                },
+                servicos: {
+                    custo: custo_servicos,
+                    lucro: lucro_servicos,
+                    valor_final: valor_final_servicos,
+                    quantidade: servicos.length
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Erro ao buscar custo total real:', error);
+        res.status(500).json({ error: 'Erro ao buscar dados de custos' });
+    }
+});
 
 // module.exports = router; <--- Garanta que esta linha vem depois de todas as rotas
 

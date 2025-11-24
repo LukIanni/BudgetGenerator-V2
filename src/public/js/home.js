@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
-    
+
     // 1. Redireciona se o usuário não estiver logado
     if (!token) {
         window.location.href = '/';
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userEmailEl = document.getElementById('userEmail');
     const userImageEl = document.getElementById('userImage');
     const logoutBtn = document.getElementById('logoutBtn');
-    
+
     // Formulário de atualização de dados
     const toggleUpdateFormBtn = document.getElementById('toggleUpdateFormBtn');
     const updateFormContainer = document.getElementById('updateFormContainer');
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Ad Container
     const adContainer = document.getElementById('adContainer');
 
-   
+
 
     // --- Funções Auxiliares ---
     const showFeedback = (message, isError = false) => {
@@ -219,8 +219,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showFeedback('Dados atualizados com sucesso!');
                 if (result.email) userEmailEl.textContent = result.email;
                 updateForm.reset();
-                setTimeout(() => { 
-                    updateFormContainer.style.display = 'none'; 
+                setTimeout(() => {
+                    updateFormContainer.style.display = 'none';
                     adContainer.style.display = 'none';
                 }, 2000);
             } else {
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!response.ok) {
                 throw new Error('Falha ao excluir');
             }
-            
+
             alert('Orçamento excluído com sucesso!');
             carregarOrcamentos();
             deleteBudgetConfirmModal.style.display = 'none';
@@ -402,11 +402,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Evento para aba "Orçamentos Gerados"
         tabOrcamentosBtn.addEventListener('click', () => {
             console.log('Aba Orçamentos Gerados clicada');
-            
+
             // Atualizar estado das abas
             tabOrcamentosBtn.classList.add('tab-active');
             tabEstatisticasBtn.classList.remove('tab-active');
-            
+
             // Mostrar lista e ocultar dashboard
             listContainer.style.display = 'block';
             dashboardContainer.style.display = 'none';
@@ -415,11 +415,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Evento para aba "Estatísticas"
         tabEstatisticasBtn.addEventListener('click', () => {
             console.log('Aba Estatísticas clicada');
-            
+
             // Atualizar estado das abas
             tabEstatisticasBtn.classList.add('tab-active');
             tabOrcamentosBtn.classList.remove('tab-active');
-            
+
             // Mostrar dashboard e ocultar lista
             dashboardContainer.style.display = 'block';
             loadAndDrawMetricsCards();

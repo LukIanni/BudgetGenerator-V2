@@ -23,6 +23,14 @@ const Servico = sequelize.define('Servico', {
         type: DataTypes.FLOAT,
         allowNull: false
     },
+    valor_total: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0
+    },
+    lucro_em_reais: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0
+    },
     resposta: {
         type: DataTypes.TEXT
     },

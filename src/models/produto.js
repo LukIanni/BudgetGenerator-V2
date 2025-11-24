@@ -7,19 +7,31 @@ const Produto = sequelize.define('Produto', {
         primaryKey: true,
         autoIncrement: true
     },
-    descricao: { 
+    descricao: {
         type: DataTypes.TEXT,
         allowNull: false
     },
     horas: {
         type: DataTypes.FLOAT,
-        allowNull: true 
+        allowNull: true
     },
-    valor_hora: { 
+    valor_hora: {
         type: DataTypes.FLOAT,
         allowNull: true
     },
-    custo_extra: { 
+    custo_extra: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0
+    },
+    custo_total: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0
+    },
+    lucro_total: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0
+    },
+    valor_final: {
         type: DataTypes.FLOAT,
         defaultValue: 0
     },

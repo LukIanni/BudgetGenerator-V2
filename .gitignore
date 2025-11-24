@@ -52,3 +52,12 @@ ehthumbs.db
 # 5. ARQUIVOS DO TYPESCRIPT
 # ------------------------------------
 *.tsbuildinfo
+
+# ------------------------------------
+# 6. ARQUIVOS DE DOCUMENTAÇÃO INTERNA
+# ------------------------------------
+CHECKLIST_VALIDACAO.md
+DIAGRAMA_FLUXO.md
+IMPLEMENTACAO_COMPLETA.md
+MINHAS_CONTRIBUICOES.md
+PLANO_GRAFICOS.md
