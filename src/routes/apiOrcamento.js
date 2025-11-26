@@ -118,15 +118,25 @@ function protect(req, res, next) {
 // Rota para gerar orçamento
 router.post('/', protect, async (req, res) => {
     try {
+        console.log('\n' + '='.repeat(70));
+        console.log('📝 [ROTA] POST /api/orcamento iniciada');
+        console.log('='.repeat(70));
+
         const dados = req.body;
+        console.log('📦 [ROTA] Dados recebidos:', JSON.stringify(dados, null, 2));
 
         // 1. Gerar resposta com IA
+        console.log('🤖 [ROTA] Chamando geminiService.generateBudgetResponse...');
         const respostaIA = await geminiService.generateBudgetResponse(dados);
+        console.log('✅ [ROTA] Resposta IA gerada com sucesso');
 
         // 2. Extrair valores da resposta
+        console.log('📊 [ROTA] Extraindo valores da resposta IA...');
         const valoresExtraidos = extrairValores(respostaIA, dados.nomeProduto ? 'produto' : 'servico');
+        console.log('✅ [ROTA] Valores extraídos:', valoresExtraidos);
 
         // 3. Salvar no banco
+        console.log('💾 [ROTA] Salvando no banco de dados...');
         let registro;
         if (dados.nomeProduto) {
             registro = await Produto.create({
@@ -140,6 +150,7 @@ router.post('/', protect, async (req, res) => {
                 resposta: respostaIA,
                 id_usuario: req.userId
             });
+            console.log('✅ [ROTA] Produto salvo com ID:', registro.id_produto);
         } else {
             registro = await Servico.create({
                 nome_servico: dados.nomeServico,
@@ -151,7 +162,12 @@ router.post('/', protect, async (req, res) => {
                 resposta: respostaIA,
                 id_usuario: req.userId
             });
+            console.log('✅ [ROTA] Serviço salvo com ID:', registro.id_servico);
         }
+
+        console.log('='.repeat(70));
+        console.log('✅ [ROTA] Orçamento gerado com sucesso!');
+        console.log('='.repeat(70) + '\n');
 
         res.status(200).json({
             mensagem: 'Orçamento gerado com sucesso!',
@@ -162,9 +178,17 @@ router.post('/', protect, async (req, res) => {
         });
 
     } catch (error) {
-        console.error('ERRO FATAL NA ROTA /api/orcamento:', error.message || error);
-        console.error('Stack Trace:', error.stack);
-        res.status(500).json({ erro: 'Erro ao gerar orçamento' });
+        console.error('\n' + '='.repeat(70));
+        console.error('❌ [ROTA] ERRO FATAL NA ROTA /api/orcamento');
+        console.error('='.repeat(70));
+        console.error('📛 Mensagem:', error.message);
+        console.error('📛 Stack:', error.stack);
+        console.error('='.repeat(70) + '\n');
+
+        res.status(500).json({
+            erro: 'Erro ao gerar orçamento',
+            detalhes: error.message
+        });
     }
 });
 
@@ -621,6 +645,58 @@ router.delete('/:id', protect, async (req, res) => {
     }
 });
 
+// Rota para atualizar o orçamento (PUT)
+router.put('/:id', protect, async (req, res) => {
+    const { id } = req.params;
+    const { resposta, tipo } = req.body;
+
+    if (!resposta || !tipo) {
+        return res.status(400).json({ erro: 'resposta e tipo são obrigatórios' });
+    }
+
+    try {
+        let atualizado = 0;
+
+        if (tipo === 'produto') {
+            atualizado = await Produto.update(
+                { resposta },
+                {
+                    where: {
+                        id_produto: id,
+                        id_usuario: req.userId
+                    }
+                }
+            );
+        } else if (tipo === 'servico') {
+            atualizado = await Servico.update(
+                { resposta },
+                {
+                    where: {
+                        id_servico: id,
+                        id_usuario: req.userId
+                    }
+                }
+            );
+        } else {
+            return res.status(400).json({ erro: 'Tipo de orçamento inválido.' });
+        }
+
+        if (atualizado[0] === 0) {
+            return res.status(404).json({
+                erro: 'Orçamento não encontrado ou você não tem permissão para editá-lo'
+            });
+        }
+
+        res.json({
+            mensagem: 'Orçamento atualizado com sucesso',
+            resposta: resposta
+        });
+    } catch (error) {
+        console.error('Erro ao atualizar orçamento:', error);
+        res.status(500).json({ erro: 'Erro ao atualizar orçamento' });
+    }
+});
+
 // ====================================================================
 // NOVA ROTA 1: Produtos Mais Orçados com Valor Total Acumulado
 // ====================================================================
@@ -733,45 +809,86 @@ router.get('/valor-real-produtos', protect, async (req, res) => {
 });
 
 // ====================================================================
-// NOVA ROTA 4: Evolução Temporal (Mês ou Semana)
+// NOVA ROTA 4: Evolução Temporal (Mês ou Semana) - COM FILTRO DE TIPO
 // ====================================================================
 router.get('/evolucao-temporal', protect, async (req, res) => {
     try {
         const id_usuario = req.userId;
-        const tipo = req.query.tipo || 'mes'; // 'mes' ou 'semana'
+        const tipo = req.query.tipo || 'produto'; // 'produto', 'servico' ou undefined (todos)
+        const periodo = req.query.periodo || 'mes'; // 'mes' ou 'semana'
 
-        // Buscar todos os orçamentos
-        const produtos = await Produto.findAll({
-            where: { id_usuario },
-            attributes: ['valor_final', 'custo_total', 'data_criacao'],
-            raw: true
-        });
+        console.log(`📊 Buscando evolução temporal - tipo: ${tipo}, periodo: ${periodo}`);
 
-        const servicos = await Servico.findAll({
-            where: { id_usuario },
-            attributes: ['valor_total', 'custo', 'data_criacao'],
-            raw: true
-        });
+        let dados = [];
 
-        const dados = [
-            ...produtos.map(p => ({
-                valor: parseFloat(p.valor_final) || 0,
-                custo: parseFloat(p.custo_total) || 0,
-                data: new Date(p.data_criacao)
-            })),
-            ...servicos.map(s => ({
+        // Se tipo = 'servico', buscar apenas serviços
+        if (tipo === 'servico') {
+            const servicos = await Servico.findAll({
+                where: { id_usuario },
+                attributes: ['valor_total', 'custo', 'data_criacao'],
+                raw: true
+            });
+
+            dados = servicos.map(s => ({
                 valor: parseFloat(s.valor_total) || 0,
                 custo: parseFloat(s.custo) || 0,
                 data: new Date(s.data_criacao)
-            }))
-        ];
+            }));
+
+            console.log(`✅ Encontrados ${servicos.length} serviços`);
+        }
+        // Se tipo = 'produto', buscar apenas produtos
+        else if (tipo === 'produto') {
+            const produtos = await Produto.findAll({
+                where: { id_usuario },
+                attributes: ['valor_final', 'custo_total', 'data_criacao'],
+                raw: true
+            });
+
+            dados = produtos.map(p => ({
+                valor: parseFloat(p.valor_final) || 0,
+                custo: parseFloat(p.custo_total) || 0,
+                data: new Date(p.data_criacao)
+            }));
+
+            console.log(`✅ Encontrados ${produtos.length} produtos`);
+        }
+        // Caso contrário, buscar ambos
+        else {
+            const produtos = await Produto.findAll({
+                where: { id_usuario },
+                attributes: ['valor_final', 'custo_total', 'data_criacao'],
+                raw: true
+            });
+
+            const servicos = await Servico.findAll({
+                where: { id_usuario },
+                attributes: ['valor_total', 'custo', 'data_criacao'],
+                raw: true
+            });
+
+            dados = [
+                ...produtos.map(p => ({
+                    valor: parseFloat(p.valor_final) || 0,
+                    custo: parseFloat(p.custo_total) || 0,
+                    data: new Date(p.data_criacao)
+                })),
+                ...servicos.map(s => ({
+                    valor: parseFloat(s.valor_total) || 0,
+                    custo: parseFloat(s.custo) || 0,
+                    data: new Date(s.data_criacao)
+                }))
+            ];
+
+            console.log(`✅ Encontrados ${produtos.length} produtos e ${servicos.length} serviços`);
+        }
 
         // Agrupar por período
         const agrupado = {};
 
         dados.forEach(item => {
             let chave;
-            if (tipo === 'semana') {
+            if (periodo === 'semana') {
                 const ano = item.data.getFullYear();
                 const semana = Math.ceil((item.data.getDate() + new Date(ano, item.data.getMonth(), 1).getDay()) / 7);
                 chave = `${ano}-W${String(semana).padStart(2, '0')}`;
@@ -803,10 +920,12 @@ router.get('/evolucao-temporal', protect, async (req, res) => {
             }))
             .sort((a, b) => a.periodo.localeCompare(b.periodo));
 
+        console.log(`✅ Evolução temporal processada: ${resultado.length} períodos`);
+
         res.json(resultado);
     } catch (error) {
-        console.error('Erro ao buscar evolução temporal:', error);
-        res.status(500).json({ error: 'Erro ao buscar dados temporais' });
+        console.error('❌ Erro ao buscar evolução temporal:', error);
+        res.status(500).json({ error: 'Erro ao buscar dados temporais', detalhes: error.message });
     }
 });
 

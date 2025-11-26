@@ -5,23 +5,33 @@ const path = require('path');
 const storage = multer.diskStorage({
     destination: './src/public/uploads/',
     filename: function(req, file, cb){
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+        const filename = file.fieldname + '-' + Date.now() + path.extname(file.originalname);
+        console.log('📸 [MULTER] Arquivo será salvo como:', filename);
+        cb(null, filename);
     }
 });
 
 // Check file type
 function checkFileType(file, cb){
     // Allowed ext
-    const filetypes = /jpeg|jpg|png|gif/;
+    const filetypes = /jpeg|jpg|png|gif|webp/;
     // Check ext
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     // Check mime
     const mimetype = filetypes.test(file.mimetype);
 
+    console.log('📸 [MULTER] Validando arquivo:');
+    console.log('  - Nome:', file.originalname);
+    console.log('  - MIME Type:', file.mimetype);
+    console.log('  - Extensão válida:', extname);
+    console.log('  - MIME válido:', mimetype);
+
     if(mimetype && extname){
+        console.log('✅ [MULTER] Arquivo validado com sucesso!');
         return cb(null, true);
     } else {
-        cb('Error: Images Only!');
+        console.error('❌ [MULTER] Tipo de arquivo inválido');
+        cb('Erro: Apenas imagens são permitidas!');
     }
 }
 
@@ -30,6 +40,7 @@ const upload = multer({
     storage: storage,
     limits: {fileSize: 5000000}, // 5MB limit
     fileFilter: function(req, file, cb){
+        console.log('📸 [MULTER] Iniciando upload...');
         checkFileType(file, cb);
     }
 }).single('profilePhoto'); // 'profilePhoto' is the name of the form field

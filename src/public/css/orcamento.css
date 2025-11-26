@@ -1,9 +1,42 @@
-.card-custom{
+.card-custom {
   background: var(--verde-claro);
-  border-radius:16px;
-  box-shadow:0 8px 24px rgba(0,0,0,.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
 }
 
 #meuInput::placeholder {
   color: var(--verde-vivo);
+}
+
+/* Estilos modernos para o modal de resultado */
+#respostaModal .modal-footer button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#respostaModal .modal-footer button[data-bs-dismiss]:hover {
+  background-color: #e0e0e0 !important;
+}
+
+#respostaModal .modal-footer #copiarResposta:hover {
+  background-color: #d4f0d4 !important;
+}
+
+#respostaModal .modal-footer #editarRespostaBtn:not(:disabled):hover {
+  background-color: #1b6f25 !important;
+}
+
+#respostaModal .modal-footer #novoOrcamento:hover {
+  background-color: #0a210c !important;
+}
+
+/* Animação suave do spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#respostaModal .spinner-border {
+  animation: spin 1s linear infinite;
 }

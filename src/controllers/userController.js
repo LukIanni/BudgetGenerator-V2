@@ -72,13 +72,20 @@ const updateUserProfile = async (req, res) => {
 // @access  Private
 const updateUserProfilePhoto = async (req, res) => {
     try {
+        console.log('📸 [FOTO] POST /profile/photo recebida');
+        console.log('📸 [FOTO] req.file:', req.file);
+        console.log('📸 [FOTO] req.user.id:', req.user?.id);
+
         const user = await User.findByPk(req.user.id);
 
         if (user) {
             if (req.file) {
+                console.log('📸 [FOTO] Arquivo recebido:', req.file.filename);
+                
                 // Deleta a foto antiga se não for a padrão
                 if (user.photo && user.photo !== defaultPhotoPath) {
                     const oldPhotoPath = path.join(__dirname, '..', 'public', user.photo);
+                    console.log('📸 [FOTO] Deletando foto antiga:', oldPhotoPath);
                     if (fs.existsSync(oldPhotoPath)) {
                         fs.unlinkSync(oldPhotoPath);
                     }
@@ -86,18 +93,23 @@ const updateUserProfilePhoto = async (req, res) => {
 
                 user.photo = `/uploads/${req.file.filename}`;
                 await user.save();
+                console.log('✅ [FOTO] Foto atualizada com sucesso:', user.photo);
+                
                 res.json({ 
                     message: 'Foto de perfil atualizada com sucesso.',
                     photo: user.photo
                 });
             } else {
+                console.error('❌ [FOTO] Nenhum arquivo recebido');
                 res.status(400).json({ message: 'Nenhum arquivo de imagem enviado.' });
             }
         } else {
+            console.error('❌ [FOTO] Usuário não encontrado');
             res.status(404).json({ message: 'Usuário não encontrado.' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Erro no servidor ao atualizar a foto.' });
+        console.error('❌ [FOTO] Erro ao atualizar foto:', error.message);
+        res.status(500).json({ message: 'Erro no servidor ao atualizar a foto.', error: error.message });
     }
 };
 

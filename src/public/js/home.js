@@ -180,56 +180,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = '/';
     });
 
-    toggleUpdateFormBtn.addEventListener('click', () => {
-        const isFormVisible = updateFormContainer.style.display === 'block';
-        updateFormContainer.style.display = isFormVisible ? 'none' : 'block';
-        adContainer.style.display = isFormVisible ? 'none' : 'block';
-    });
+    // toggleUpdateFormBtn não existe mais pois o formulário está no modal Bootstrap
+    // removido: toggleUpdateFormBtn.addEventListener('click', ...)
+    // removido: cancelUpdateBtn.addEventListener('click', ...)
 
-    cancelUpdateBtn.addEventListener('click', () => {
-        updateFormContainer.style.display = 'none';
-        adContainer.style.display = 'none';
-        updateForm.reset();
-    });
+    if (updateForm) {
+        updateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('updateEmail').value.trim();
+            const password = document.getElementById('updatePassword').value.trim();
+            const body = {};
+            if (email) body.email = email;
+            if (password) body.password = password;
 
-    updateForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('updateEmail').value.trim();
-        const password = document.getElementById('updatePassword').value.trim();
-        const body = {};
-        if (email) body.email = email;
-        if (password) body.password = password;
-
-        if (Object.keys(body).length === 0) {
-            showFeedback('Preencha ao menos um campo.', true);
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/users/profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify(body),
-            });
-            const result = await response.json();
-            if (response.ok) {
-                showFeedback('Dados atualizados com sucesso!');
-                if (result.email) userEmailEl.textContent = result.email;
-                updateForm.reset();
-                setTimeout(() => {
-                    updateFormContainer.style.display = 'none';
-                    adContainer.style.display = 'none';
-                }, 2000);
-            } else {
-                showFeedback(result.message || 'Erro ao atualizar.', true);
+            if (Object.keys(body).length === 0) {
+                showFeedback('Preencha ao menos um campo.', true);
+                return;
             }
-        } catch (error) {
-            showFeedback('Erro de conexão.', true);
-        }
-    });
+
+            try {
+                const response = await fetch('/api/users/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(body),
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showFeedback('Dados atualizados com sucesso!');
+                    if (result.email) userEmailEl.textContent = result.email;
+                    updateForm.reset();
+                    setTimeout(() => {
+                        updateFormContainer.style.display = 'none';
+                        adContainer.style.display = 'none';
+                    }, 2000);
+                } else {
+                    showFeedback(result.message || 'Erro ao atualizar.', true);
+                }
+            } catch (error) {
+                showFeedback('Erro de conexão.', true);
+            }
+        });
+    }
 
     // Lógica do Modal de Exclusão de Conta
     deleteAccountBtn.addEventListener('click', () => { deleteConfirmModal.style.display = 'flex'; });
@@ -289,61 +283,158 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Lógica do Modal de Upload de Foto
-    changePhotoBtn.addEventListener('click', () => { photoUploadModal.style.display = 'flex'; });
-    cancelUploadBtn.addEventListener('click', () => { photoUploadModal.style.display = 'none'; });
+    console.log('🖼️ [FOTO] Inicializando listeners de upload de foto...');
+    console.log('🖼️ [FOTO] changePhotoBtn:', !!changePhotoBtn);
+    console.log('🖼️ [FOTO] photoUploadModal:', !!photoUploadModal);
+    console.log('🖼️ [FOTO] photoUploadForm:', !!photoUploadForm);
+    console.log('🖼️ [FOTO] cancelUploadBtn:', !!document.getElementById('cancelUploadBtn'));
+    console.log('🖼️ [FOTO] removePhotoBtn:', !!removePhotoBtn);
 
-    removePhotoBtn.addEventListener('click', async () => {
-        if (confirm('Tem certeza que deseja remover sua foto de perfil? A foto padrão será restaurada.')) {
+    if (changePhotoBtn) {
+        changePhotoBtn.addEventListener('click', () => {
+            console.log('📸 Botão "Alterar Foto" clicado!');
+            if (photoUploadModal) {
+                photoUploadModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                console.log('✅ Modal de foto aberto');
+            }
+        });
+    }
+
+    const cancelUploadBtnEl = document.getElementById('cancelUploadBtn');
+    if (cancelUploadBtnEl) {
+        cancelUploadBtnEl.addEventListener('click', () => {
+            console.log('❌ Cancelar upload clicado');
+            if (photoUploadModal) {
+                photoUploadModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                photoUploadForm.reset();
+                document.getElementById('filePreview').style.display = 'none';
+            }
+        });
+    }
+
+    if (removePhotoBtn) {
+        removePhotoBtn.addEventListener('click', async () => {
+            if (confirm('Tem certeza que deseja remover sua foto de perfil?')) {
+                const originalText = removePhotoBtn.innerHTML;
+                removePhotoBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Removendo...';
+                removePhotoBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/users/profile/photo', {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message || 'Foto removida com sucesso!');
+                        userImageEl.src = result.photo || '../images/testeusuario.jpeg';
+                        photoUploadModal.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                        photoUploadForm.reset();
+                    } else {
+                        alert(result.message || 'Erro ao remover a foto.');
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao remover foto:', error);
+                    alert('Erro de conexão ao remover a foto.');
+                } finally {
+                    removePhotoBtn.innerHTML = originalText;
+                    removePhotoBtn.disabled = false;
+                }
+            }
+        });
+    }
+
+    if (photoUploadForm) {
+        photoUploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const photoFile = document.getElementById('photoFile').files[0];
+            
+            if (!photoFile) {
+                alert('Por favor, selecione um arquivo de imagem.');
+                return;
+            }
+
+            // Validar tamanho (máx 5MB)
+            if (photoFile.size > 5 * 1024 * 1024) {
+                alert('O arquivo é muito grande. Máximo de 5MB.');
+                return;
+            }
+
+            // Validar tipo
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(photoFile.type)) {
+                alert('Tipo de arquivo não suportado. Use JPG, PNG, GIF ou WebP.');
+                return;
+            }
+
+            const submitBtn = photoUploadForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('profilePhoto', photoFile);
+
             try {
+                console.log('📤 Iniciando upload de foto...');
                 const response = await fetch('/api/users/profile/photo', {
-                    method: 'DELETE',
+                    method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData,
                 });
 
+                console.log('📥 Response status:', response.status);
                 const result = await response.json();
+                console.log('📥 Response:', result);
+
                 if (response.ok) {
-                    alert(result.message);
-                    userImageEl.src = result.photo; // Atualiza para a foto padrão
+                    alert('Foto de perfil atualizada com sucesso!');
+                    userImageEl.src = result.photo;
                     photoUploadModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    photoUploadForm.reset();
+                    document.getElementById('filePreview').style.display = 'none';
                 } else {
-                    alert(result.message || 'Erro ao remover a foto.');
+                    alert(result.message || 'Erro ao fazer upload da foto.');
                 }
             } catch (error) {
-                alert('Erro de conexão ao remover a foto.');
+                console.error('❌ Erro ao fazer upload:', error);
+                alert('Erro de conexão ao fazer upload.');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
-        }
-    });
+        });
+    }
 
-    photoUploadForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const photoFile = document.getElementById('photoFile').files[0];
-        if (!photoFile) {
-            alert('Por favor, selecione um arquivo de imagem.');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('profilePhoto', photoFile);
-
-        try {
-            const response = await fetch('/api/users/profile/photo', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData,
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                alert('Foto de perfil atualizada com sucesso!');
-                userImageEl.src = result.photo; // Atualiza a imagem na página
-                photoUploadModal.style.display = 'none';
-            } else {
-                alert(result.message || 'Erro ao fazer upload da foto.');
+    // Adicionar preview de imagem quando arquivo é selecionado
+    const photoFileInput = document.getElementById('photoFile');
+    if (photoFileInput) {
+        photoFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const previewDiv = document.getElementById('filePreview');
+                    const previewImg = document.getElementById('previewImage');
+                    const fileNameEl = document.getElementById('fileName');
+                    
+                    previewImg.src = event.target.result;
+                    fileNameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(2) + ' KB)';
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
             }
-        } catch (error) {
-            alert('Erro de conexão ao fazer upload.');
-        }
-    });
+        });
+    }
+
+
+    // Lógica do Modal de Upload de Foto - DESATIVADO TEMPORARIAMENTE
+    // Será reativado quando corrigido
 
     // Event Listener para Orçamentos
     budgetListEl.addEventListener('click', async (e) => {
@@ -379,18 +470,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     });
-});
-// ARQUIVO: home.js
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Carregado - Iniciando configuração das abas');
 
+    // --- Configuração das Abas (Orçamentos vs Estatísticas) ---
     const tabOrcamentosBtn = document.getElementById('tabOrcamentosBtn');
     const tabEstatisticasBtn = document.getElementById('tabEstatisticasBtn');
     const listContainer = document.getElementById('listContainer');
     const dashboardContainer = document.getElementById('dashboardContainer');
     const backBtn = document.getElementById('backToMetricsBtn');
 
-    console.log('Elementos encontrados:', {
+    console.log('Elementos das abas encontrados:', {
         tabOrcamentosBtn: !!tabOrcamentosBtn,
         tabEstatisticasBtn: !!tabEstatisticasBtn,
         listContainer: !!listContainer,
@@ -426,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listContainer.style.display = 'none';
         });
     } else {
-        console.error('Elementos não encontrados:', {
+        console.error('Elementos das abas não encontrados:', {
             tabOrcamentosBtn: tabOrcamentosBtn,
             tabEstatisticasBtn: tabEstatisticasBtn,
             listContainer: listContainer,

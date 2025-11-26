@@ -107,8 +107,8 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Materiais Utilizados*</label>
-              <input type="text" class="form-control" name="materiaisServico"
-                placeholder="Ex.: Tinta, Ferramentas..." required>
+              <input type="text" class="form-control" name="materiaisServico" placeholder="Ex.: Tinta, Ferramentas..."
+                required>
             </div>
             <div class="row mb-3">
               <div class="col-md-6">
@@ -139,26 +139,75 @@
   </div>
 
   <div class="modal fade" id="respostaModal" tabindex="-1" aria-labelledby="respostaModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="respostaModalLabel">Orçamento Gerado</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content" style="border: none; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+        <!-- Header com gradiente -->
+        <div class="modal-header"
+          style="background: linear-gradient(135deg, #228F2F 0%, #113815 100%); border: none; border-radius: 16px 16px 0 0; padding: 24px;">
+          <h5 class="modal-title" id="respostaModalLabel" style="color: white; font-weight: 700; font-size: 1.5rem;">📋
+            Orçamento Gerado</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+            style="filter: brightness(0) invert(1);"></button>
         </div>
-        <div class="modal-body">
+
+        <!-- Body com conteúdo estruturado -->
+        <div class="modal-body"
+          style="padding: 32px; font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <!-- Loading State -->
           <div id="loadingSpinner" class="text-center">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Gerando orçamento...</span>
+            <div style="display: inline-block; margin-bottom: 16px;">
+              <div class="spinner-border text-success" role="status"
+                style="width: 3rem; height: 3rem; border-width: 3px;">
+                <span class="visually-hidden">Gerando orçamento...</span>
+              </div>
             </div>
-            <p class="mt-2">Gerando orçamento personalizado...</p>
+            <p style="color: #666; font-size: 1.05rem; font-weight: 500; margin: 0;">Gerando seu orçamento
+              personalizado...</p>
+            <p style="color: #999; font-size: 0.9rem; margin-top: 8px;">Analisando dados com IA...</p>
           </div>
-          <div id="respostaContent" style="white-space: pre-line;" class="d-none"></div>
+
+          <!-- Content State -->
+          <div id="respostaContent" class="d-none">
+            <div
+              style="background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%); border-left: 4px solid #228F2F; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+              <div id="respostaText"
+                style="color: #333; line-height: 1.8; font-size: 0.95rem; white-space: pre-wrap; word-wrap: break-word;">
+              </div>
+            </div>
+
+            <!-- Info Box -->
+            <div
+              style="background: #E8F5E9; border-radius: 8px; padding: 16px; margin-top: 16px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="bi bi-info-circle-fill"
+                style="color: #228F2F; font-size: 1.2rem; flex-shrink: 0; margin-top: 2px;"></i>
+              <div>
+                <p style="color: #228F2F; font-weight: 600; margin: 0 0 4px 0; font-size: 0.9rem;">Dica</p>
+                <p style="color: #1b5e20; margin: 0; font-size: 0.85rem;">Você pode editar este orçamento antes de
+                  salvá-lo para personalizá-lo ainda mais.</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-          <button type="button" class="btn btn-primary" id="editarRespostaBtn" disabled>Editar Resposta</button>
-          <button type="button" class="btn btn-info" id="copiarResposta">Copiar Resposta</button>
-          <button type="button" class="btn btn-success" id="novoOrcamento">Novo Orçamento</button>
+
+        <!-- Footer com botões -->
+        <div class="modal-footer"
+          style="background: #f8f9fa; border: none; border-top: 1px solid #e9ecef; border-radius: 0 0 16px 16px; padding: 20px 24px; display: flex; gap: 12px;">
+          <button type="button" class="btn" data-bs-dismiss="modal"
+            style="background: #f0f0f0; color: #333; font-weight: 600; border: none; border-radius: 8px; padding: 10px 20px; transition: all 0.3s;">
+            <i class="bi bi-x-lg"></i> Fechar
+          </button>
+          <button type="button" class="btn" id="copiarResposta"
+            style="background: #E8F5E9; color: #228F2F; font-weight: 600; border: none; border-radius: 8px; padding: 10px 20px; transition: all 0.3s;">
+            <i class="bi bi-clipboard"></i> Copiar
+          </button>
+          <button type="button" class="btn" id="editarRespostaBtn" disabled
+            style="background: #228F2F; color: white; font-weight: 600; border: none; border-radius: 8px; padding: 10px 20px; transition: all 0.3s;">
+            <i class="bi bi-pencil"></i> Editar
+          </button>
+          <button type="button" class="btn" id="novoOrcamento"
+            style="background: #113815; color: white; font-weight: 600; border: none; border-radius: 8px; padding: 10px 20px; transition: all 0.3s;">
+            <i class="bi bi-plus-circle"></i> Novo
+          </button>
         </div>
       </div>
     </div>
@@ -182,6 +231,7 @@
     const respostaModal = new bootstrap.Modal(document.getElementById('respostaModal'));
     const loadingSpinner = document.getElementById('loadingSpinner');
     const respostaContent = document.getElementById('respostaContent');
+    const respostaText = document.getElementById('respostaText');
     const modalFooter = document.querySelector('.modal-footer');
     const copiarBtn = document.getElementById('copiarResposta');
     const novoOrcamentoBtn = document.getElementById('novoOrcamento');
@@ -217,8 +267,8 @@
           // Esconde o loading e mostra a resposta
           loadingSpinner.classList.add('d-none');
           respostaContent.classList.remove('d-none');
-          respostaContent.textContent = resposta.resposta;
-          
+          respostaText.textContent = resposta.resposta;
+
           // Habilita o botão de editar após receber a resposta
           editarRespostaBtn.disabled = false;
 
@@ -231,8 +281,8 @@
           console.error('Erro:', err);
           loadingSpinner.classList.add('d-none');
           respostaContent.classList.remove('d-none');
-          respostaContent.textContent = `Erro ao gerar orçamento. Detalhes: ${err.message}`;
-          
+          respostaText.textContent = `❌ Erro ao gerar orçamento\n\nDetalhes: ${err.message}`;
+
           if (err.message.includes('401')) {
             setTimeout(() => window.location.href = '/', 2000); // Redireciona após 2 segundos
           }
@@ -241,9 +291,16 @@
     });
 
     copiarBtn.addEventListener('click', () => {
-      const texto = respostaContent.textContent;
+      const texto = respostaText.textContent;
       navigator.clipboard.writeText(texto).then(() => {
-        alert('Resposta copiada para a área de transferência!');
+        // Feedback visual
+        const originalText = copiarBtn.innerHTML;
+        copiarBtn.innerHTML = '<i class="bi bi-check-lg"></i> Copiado!';
+        copiarBtn.style.background = '#4CAF50';
+        setTimeout(() => {
+          copiarBtn.innerHTML = originalText;
+          copiarBtn.style.background = '#E8F5E9';
+        }, 2000);
       });
     });
 
@@ -272,7 +329,7 @@
     document.getElementById('respostaModal').addEventListener('hidden.bs.modal', () => {
       loadingSpinner.classList.remove('d-none');
       respostaContent.classList.add('d-none');
-      respostaContent.textContent = '';
+      respostaText.textContent = '';
       editarRespostaBtn.disabled = true;
     });
   </script>

@@ -215,10 +215,10 @@ async function drawIndividualChart(metricId, produtosMaisOrcados, valorRealServi
             break;
 
         case 'valor-total-servicos':
-            // Pegar dados de evolução temporal
+            // Pegar dados de evolução temporal APENAS DE SERVIÇOS
             const token = localStorage.getItem('token');
             try {
-                const evolucaoResponse = await fetch(`${API_BASE}/evolucao-temporal?tipo=mes`, {
+                const evolucaoResponse = await fetch(`${API_BASE}/evolucao-temporal?tipo=servico&periodo=mes`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const evolucao = await evolucaoResponse.json();
@@ -230,15 +230,17 @@ async function drawIndividualChart(metricId, produtosMaisOrcados, valorRealServi
                 backgroundColor = 'rgba(255, 193, 7, 0.2)';
                 needsToggle = true;
 
-                drawLineChart(labels, data, title, 'Valor Total (R$)');
-                addToggleTemporalButton();
+                drawLineChart(labels, data, title, 'Valor Total de Serviços (R$)');
+                addToggleTemporalButton('servico');
                 return;
             } catch (error) {
-                console.error('Erro ao carregar evolução:', error);
+                console.error('Erro ao carregar evolução de serviços:', error);
+                // Fallback: mostrar apenas o total de serviços
                 title = 'Valor Total de Serviços';
                 labels = ['Serviços'];
                 data = [valorRealServicos.valor_total_servicos || 0];
                 chartType = 'bar';
+                backgroundColor = ['#ffc107'];
             }
             break;
 
@@ -434,7 +436,7 @@ function drawLineChart(labels, data, title, yAxisLabel) {
 // ====================================================================
 // FUNÇÃO AUXILIAR: Adicionar Toggle para Temporal
 // ====================================================================
-function addToggleTemporalButton() {
+function addToggleTemporalButton(tipoOrcamento = 'produto') {
     const buttonsContainer = document.querySelector('.d-flex.justify-content-center');
     if (buttonsContainer && !document.getElementById('toggleTemporalBtn')) {
         const toggleBtn = document.createElement('button');
@@ -444,24 +446,34 @@ function addToggleTemporalButton() {
 
         toggleBtn.addEventListener('click', async function () {
             const token = localStorage.getItem('token');
-            const tipo = this.innerHTML.includes('Semana') ? 'semana' : 'mes';
-            const novoTipo = tipo === 'mes' ? 'semana' : 'mes';
+            const periodoAtual = this.innerHTML.includes('Semana') ? 'mes' : 'semana';
+            const novoPeríodo = periodoAtual === 'mes' ? 'semana' : 'mes';
 
             try {
-                const response = await fetch(`${API_BASE}/evolucao-temporal?tipo=${novoTipo}`, {
+                const url = `${API_BASE}/evolucao-temporal?tipo=${tipoOrcamento}&periodo=${novoPeríodo}`;
+                console.log('Buscando dados de:', url);
+                
+                const response = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                
                 const data = await response.json();
 
                 const labels = data.map(e => e.periodo);
                 const valores = data.map(e => e.valor_total);
-                const title = `Evolução de Serviços por ${novoTipo === 'mes' ? 'Mês' : 'Semana'}`;
+                const periodoTexto = novoPeríodo === 'mes' ? 'Mês' : 'Semana';
+                const title = `Evolução de ${tipoOrcamento === 'servico' ? 'Serviços' : 'Produtos'} por ${periodoTexto}`;
 
-                drawLineChart(labels, valores, title, 'Valor Total (R$)');
+                drawLineChart(labels, valores, title, `Valor Total de ${tipoOrcamento === 'servico' ? 'Serviços' : 'Produtos'} (R$)`);
 
-                this.innerHTML = `<i class="bi bi-calendar-week me-1"></i> Mudar para ${novoTipo === 'mes' ? 'Semana' : 'Mês'}`;
+                this.innerHTML = `<i class="bi bi-calendar-week me-1"></i> Mudar para ${novoPeríodo === 'mes' ? 'Semana' : 'Mês'}`;
             } catch (error) {
                 console.error('Erro ao alternar período:', error);
+                alert('Erro ao carregar dados. Tente novamente.');
             }
         });
 

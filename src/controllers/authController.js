@@ -6,19 +6,19 @@ const jwt = require('jsonwebtoken');
 const register = async (req, res) => {
 
     //Pega os dados da requisição 
-    const {name, email, password, confirmpassword} = req.body;
+    const { name, email, password, confirmpassword } = req.body;
 
     //Verificando se existe campos em branco
-    if(!name || !email || !password || !confirmpassword){
-        return res.status(400).json({mensagem: 'existem campos não preenchidos'})
+    if (!name || !email || !password || !confirmpassword) {
+        return res.status(400).json({ mensagem: 'existem campos não preenchidos' })
     }
 
     //Confere a confirnação de senha do usuário
-    if(confirmpassword !== password){
-        res.status(400).json({mensagem: 'senhas diferentes'});
+    if (confirmpassword !== password) {
+        res.status(400).json({ mensagem: 'senhas diferentes' });
         return
     }
-        
+
     // Verifica se o usuário já existe
     const userExists = await User.findOne({ where: { email } });
 
@@ -44,8 +44,8 @@ const register = async (req, res) => {
             expiresIn: '1h',
         });
 
-        return res.status(201).json({ 
-            message: 'Usuário criado com sucesso!', 
+        return res.status(201).json({
+            message: 'Usuário criado com sucesso!',
             token: token,
             user: {
                 id: newUser.id,
@@ -89,8 +89,8 @@ const login = async (req, res) => {
         console.log('✅ [LOGIN] User ID:', user.id);
         console.log('✅ [LOGIN] JWT_SECRET (primeiros 10 chars):', process.env.JWT_SECRET?.substring(0, 10) + '...');
 
-        res.json({ 
-            message: 'Login bem-sucedido!', 
+        res.json({
+            message: 'Login bem-sucedido!',
             token: token,
             user: {
                 id: user.id,
@@ -104,8 +104,93 @@ const login = async (req, res) => {
     }
 };
 
+const refresh = async (req, res) => {
+    try {
+        // Pega o token do header
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ message: 'Token não fornecido.' });
+        }
+
+        const oldToken = authHeader.substring(7); // Remove 'Bearer '
+
+        // Verifica e decodifica o token (mesmo que expirado)
+        let decoded;
+        try {
+            decoded = jwt.verify(oldToken, process.env.JWT_SECRET);
+        } catch (error) {
+            // Se o token expirou, tenta decodificar ignorando a expiração
+            if (error.name === 'TokenExpiredError') {
+                decoded = jwt.decode(oldToken);
+                if (!decoded) {
+                    return res.status(401).json({ message: 'Token inválido.' });
+                }
+            } else {
+                return res.status(401).json({ message: 'Token inválido.' });
+            }
+        }
+
+        // Busca o usuário no banco
+        const user = await User.findByPk(decoded.id);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        // Gera um novo token
+        const newToken = jwt.sign({ id: user.id, name: user.name }, process.env.JWT_SECRET, {
+            expiresIn: '1h',
+        });
+
+        console.log('🔄 [REFRESH] Novo token gerado com sucesso para user ID:', user.id);
+
+        res.json({
+            message: 'Token renovado com sucesso!',
+            token: newToken,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                photo: user.photo
+            }
+        });
+    } catch (error) {
+        console.error('❌ [REFRESH] Erro ao renovar token:', error.message);
+        res.status(500).json({ message: 'Erro ao renovar token.', error: error.message });
+    }
+};
+
+const verify = async (req, res) => {
+    try {
+        // O middleware de autenticação já verifica o token
+        // Se chegou aqui, o token é válido
+        const userId = req.user.id; // Assume que o middleware adiciona isso
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        console.log('✅ [VERIFY] Token válido para user ID:', userId);
+
+        res.json({
+            message: 'Token válido!',
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                photo: user.photo
+            }
+        });
+    } catch (error) {
+        console.error('❌ [VERIFY] Erro ao verificar token:', error.message);
+        res.status(500).json({ message: 'Erro ao verificar token.', error: error.message });
+    }
+};
+
 module.exports = {
     register,
     login,
+    refresh,
+    verify,
 };
 

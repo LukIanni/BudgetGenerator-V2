@@ -15,6 +15,9 @@ class GeminiService {
 
     async generateBudgetResponse(data) {
         try {
+            console.log('🤖 [GEMINI] Iniciando geração de orçamento...');
+            console.log('🤖 [GEMINI] Dados recebidos:', JSON.stringify(data, null, 2));
+
             let prompt = "";
 
             if (data.nomeProduto) {
@@ -59,15 +62,25 @@ VALOR TOTAL DO SERVIÇO: R$ [calcule: custo + lucro]
 `;
             }
 
+            console.log('🤖 [GEMINI] Prompt preparado, enviando para API...');
+            console.log('🤖 [GEMINI] Model:', this.model.model);
+            console.log('🤖 [GEMINI] API Key presente:', !!process.env.GEMINI_API_KEY);
+
             const result = await this.model.generateContent({
                 contents: [{ parts: [{ text: prompt }] }]
             });
 
+            console.log('🤖 [GEMINI] Resposta recebida da API');
             const response = await result.response;
-            return response.text();
+            const texto = response.text();
+
+            console.log('✅ [GEMINI] Resposta gerada com sucesso (', texto.length, 'caracteres )');
+            return texto;
         } catch (error) {
-            console.error('Erro ao gerar resposta com Gemini:', error);
-            throw error;
+            console.error('❌ [GEMINI] ERRO ao gerar resposta:', error);
+            console.error('❌ [GEMINI] Mensagem:', error.message);
+            console.error('❌ [GEMINI] Stack:', error.stack);
+            throw new Error(`Erro ao gerar orçamento com Gemini: ${error.message}`);
         }
     }
 }

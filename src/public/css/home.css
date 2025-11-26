@@ -145,3 +145,93 @@
 .col-md-4>.card {
     flex: 1;
 }
+
+/* Estilos modernos para o modal de edição de dados */
+#editDataModal .modal-body input:focus {
+    border-color: #228F2F !important;
+    box-shadow: 0 0 0 0.2rem rgba(34, 143, 47, 0.15) !important;
+}
+
+#editDataModal .modal-footer button:hover,
+#editDataModal .modal-body button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#editDataModal #changePhotoBtn:hover {
+    background-color: #BBDEFB !important;
+}
+
+#editDataModal #deleteAccountBtn:hover {
+    background-color: #FFCDD2 !important;
+}
+
+#editDataModal .modal-body button[type="submit"]:hover {
+    background-color: #1b6f25 !important;
+}
+
+#editDataModal .modal-body button[type="button"]:hover {
+    background-color: #e0e0e0 !important;
+}
+
+/* Animação de feedback */
+#feedbackMessage {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilos para o modal de upload de foto */
+#photoUploadModal .modal-content-custom input[type="file"] {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#photoUploadModal .modal-content-custom input[type="file"]:hover {
+    border-color: #228F2F !important;
+    background-color: #f5f5f5;
+}
+
+#photoUploadModal .modal-content-custom input[type="file"]:focus {
+    border-color: #228F2F !important;
+    box-shadow: 0 0 0 3px rgba(34, 143, 47, 0.15);
+    outline: none;
+}
+
+#filePreview img {
+    animation: slideDown 0.3s ease-out;
+}
+
+#photoUploadModal .modal-buttons button {
+    transition: all 0.3s ease;
+}
+
+#photoUploadModal .modal-buttons button[type="submit"]:hover {
+    background-color: #1b6f25 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 143, 47, 0.3);
+}
+
+#photoUploadModal .modal-buttons button[type="button"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#photoUploadModal .modal-buttons #removePhotoBtn:hover {
+    background-color: #FFCDD2 !important;
+    border-color: #c62828 !important;
+}
+
+#photoUploadModal .modal-buttons #cancelUploadBtn:hover {
+    background-color: #e0e0e0 !important;
+}
